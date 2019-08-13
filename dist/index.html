@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="./index.css">
+</head>
+<body>
+	<canvas id="canvas"></canvas>
+	<script src="./subtile3d.js"></script>
+	<script type="text/javascript">
+		window.addEventListener('load', () => {
+			var canvas = document.getElementById('canvas')
+			var s3d = subtile3d.useCanvas(canvas) 
+			// 3d.setAnimProgress(0..7) 
+			var controlPanel = document.getElementById('control-panel')
+			var i, button; 
+			for(i = 0; i < 8; i++){
+				button = document.createElement('div')
+				button.classList.add('button') 
+				button.addEventListener('click', ((progress) => { 
+						() => s3d.setAnimProgress(progress) 
+					})(i)
+				)
+				button.textContent = i
+				controlPanel.appendChild(button) 
+			}
+		})
+	</script>
+	<div id="control-panel">
+		<p>Set progress to...</p>
+	</div>
+</body>
+</html>

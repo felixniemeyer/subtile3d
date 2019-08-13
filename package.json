@@ -1,0 +1,17 @@
+{
+  "name": "subtile3d",
+  "version": "1.0.0",
+  "description": "3d graphics for dbl portfolio website",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "felix paul niemeyer",
+  "devDependencies": {
+    "webpack": "^4.39.1",
+    "webpack-cli": "^3.3.6"
+  },
+  "dependencies": {
+    "raw-loader": "^3.1.0"
+  }
+}
