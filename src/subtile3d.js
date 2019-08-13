@@ -1,14 +1,13 @@
 import buildShaders from './build-shaders.js'
 
+// TODO: tidy up function, e.g. deleteBuffer(vb)...
+
 export function useCanvas(canvas) {
   const maxResolution = 4096
   const vertexCountSqrt = 32
   const quadCountSqrt = vertexCountSqrt - 1
   const vertexCount = Math.pow(vertexCountSqrt, 2) 
   const quadCount = Math.pow(quadCountSqrt, 2)
-
-  let progress = 0
-
 
   let gl = undefined
   const initGl = () => {
@@ -39,27 +38,48 @@ export function useCanvas(canvas) {
     return true
   }
 
-  let resolution = 512
-  const resize = () => {
-    let height = canvas.clientHeight
-    console.log(height) 
-    let res = Math.min(height, maxResolution)
-    if(resolution != res) {
-      resolution = res
-      canvas.width = res
-      canvas.height = res
-    }
+  let shader 
+  const initShaderPrograms = () => {
+    shader = buildShaders(gl)
+
+    gl.useProgram(shader.progs.calculateVertices)
+    // static
+    // dynamic
+    gl.uniform1f(shader.uniLocs.calculateVertices.time, 0)
+    gl.uniform1f(shader.uniLocs.calculateVertices.progress, 0)
+
+    gl.useProgram(shader.progs.drawVertices)
+    // static
+    gl.uniform1i(shader.uniLocs.drawVertices.quadCountSqrt, quadCountSqrt)
+    gl.uniform1i(shader.uniLocs.drawVertices.vertexCountSqrt, vertexCountSqrt)
+    gl.uniform1f(shader.uniLocs.drawVertices.quadCountSqrtInverse, 1.0 / quadCountSqrt)
+    gl.uniform1f(shader.uniLocs.drawVertices.vertexCountSqrtInverse, 1.0 / vertexCountSqrt)
+    // dynamic 
+    
+    gl.useProgram(shader.progs.drawTexture)
+    // static
+    // dynamic
+    gl.uniform2fv(shader.uniLocs.drawTexture.position, [0.1, 0.6])
+    gl.uniform2fv(shader.uniLocs.drawTexture.size, [0.2, 0.2])
+  }
+  
+  const initGeometry = () => {
+    initVerticesVao()
+    initQuadVao()
   }
 
   let verticesVao
   const initVerticesVao = () => {
-    let verticesPerQuad = 2 * 3
-    let valuesPerQuad = 2 * verticesPerQuad
-    let vertexData = new Float32Array(quadCount * verticesPerQuad)
+    verticesVao = gl.createVertexArray()
+    gl.bindVertexArray(verticesVao) 
+
+    let vb = gl.createBuffer()
+    let vertexData = new Uint16Array(vertexCount * 6)
+    /*
     for(var x = 0; x < quadCountSqrt; x++) {
       for(var y = 0; y < quadCountSqrt; y++) {
         var offset = valuesPerQuad * ( x + y * quadCountSqrt)
-
+        
         vertexData[offset + 0]   = x
         vertexData[offset + 1]   = y
 
@@ -79,33 +99,30 @@ export function useCanvas(canvas) {
         vertexData[offset + 10]  = x + 1
         vertexData[offset + 11]  = y
       }
-    }
-    verticesVao = gl.createVertexArray()
-    gl.bindVertexArray(verticesVao) 
-    let vb = gl.createBuffer()
+    } */
+
     gl.bindBuffer(gl.ARRAY_BUFFER, vb)
     gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW)
-    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0)
+    gl.vertexAttribIPointer(0, 1, gl.UNSIGNED_SHORT, 0, 0)
     gl.enableVertexAttribArray(0)
-    gl.bindVertexArray(gl.NULL)
   }
 
   var quadVao
   const initQuadVao = () => {
+    quadVao = gl.createVertexArray()
+    gl.bindVertexArray(quadVao) 
+
+    let vb = gl.createBuffer()
     let vertexData = new Float32Array([
       -1, -1,
        1, -1, 
       -1,  1, 
        1,  1
     ])
-    quadVao = gl.createVertexArray()
-    gl.bindVertexArray(quadVao) 
-    let vb = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, vb) 
     gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW) 
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0)
     gl.enableVertexAttribArray(0)
-    gl.bindVertexArray(gl.NULL)
   }
 
   let verticesTexture
@@ -124,8 +141,8 @@ export function useCanvas(canvas) {
       gl.FLOAT,
       null
     ) 
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
@@ -139,7 +156,47 @@ export function useCanvas(canvas) {
       0)
   }
 
-  let calculateVertices = () => {
+  let progress = 0
+  let quit = false
+  let t0 = Date.now()
+  let time = 0
+  const loop = () => {
+    time = (Date.now() - t0) / 1000
+    resize()
+    draw()
+    if(!quit) {
+      window.requestAnimationFrame(loop)
+    }
+  }
+
+  let resolution = 512
+  const resize = () => {
+    let height = canvas.clientHeight
+    let res = Math.min(height, maxResolution)
+    if(resolution != res) {
+      resolution = res
+      canvas.width = res
+      canvas.height = res
+    }
+  }
+
+  const draw = () => {
+    //clearFrameBuffer()
+    calculateVertices()
+    drawVertices()
+    // drawVerticesTexture()
+  }
+  
+  const clearFrameBuffer = () => {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, gl.NULL)
+    gl.viewport(0,0,resolution,resolution)
+    gl.clearColor(0.30,0.30,0.30,1)
+    console.log('clear') 
+    gl.clearDepth(0)
+    gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+  }
+
+  const calculateVertices = () => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, verticesFramebuffer)
     gl.viewport(0,0,vertexCountSqrt,vertexCountSqrt)
 
@@ -152,36 +209,16 @@ export function useCanvas(canvas) {
   }
 
   const drawVertices = () => {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, gl.NULL)
     gl.viewport(0, 0, resolution, resolution) 
+
     gl.useProgram(shader.progs.drawVertices)
+
+    gl.activeTexture(gl.TEXTURE0)
+    gl.bindTexture(gl.TEXTURE_2D, verticesTexture)
+
     gl.bindVertexArray(verticesVao) 
-    gl.drawElements(gl.TRIANGLES, quadCount * 6, gl.UNSIGNED_SHORT, 0)
-  }
-
-  const initGeometry = () => {
-    initVerticesVao()
-    initQuadVao()
-  }
-
-  let shader 
-  const initShaderPrograms = () => {
-    shader = buildShaders(gl)
-
-    gl.useProgram(shader.progs.calculateVertices)
-    // static
-    // dynamic
-    gl.uniform1f(shader.uniLocs.calculateVertices.time, 0)
-    gl.uniform1f(shader.uniLocs.calculateVertices.progress, 0)
-
-    gl.useProgram(shader.progs.drawVertices)
-    // static
-    // dynamic 
-    
-    gl.useProgram(shader.progs.drawTexture)
-    // static
-    // dynamic
-    gl.uniform2fv(shader.uniLocs.drawTexture.position, [0.1, 0.6])
-    gl.uniform2fv(shader.uniLocs.drawTexture.size, [0.2, 0.2])
+    gl.drawArrays(gl.TRIANGLES, 0, vertexCount * 6)
   }
 
   const drawVerticesTexture = () => {
@@ -197,43 +234,25 @@ export function useCanvas(canvas) {
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4) 
   }
 
-  const draw = () => {
-    calculateVertices()
-    drawVerticesTexture()
-  }
-
-  let quit = false
-  let t0 = Date.now()
-  let time = 0
-  const loop = () => {
-    time = (Date.now() - t0) / 1000
-    resize()
-    draw()
-    if(!quit) {
-      window.requestAnimationFrame(loop)
-    }
-  }
-
-  window.addEventListener("resize", () => {
-    resize()
-  })
-
   if(initGl()) {
-    initShaderPrograms()
-    initGeometry()
-    initVerticesTexture()
-    loop()
-  }
-
-  // return 3dCockpit
-  return { 
-    setAnimProgress: (destination, duration) => {
-      duration = duration || 0
-      // TBD: smooth
-      progress = destination
-    },
-    quit: () => { 
-      quit = true 
+    setTimeout(() => {
+      initShaderPrograms()
+      initGeometry()
+      initVerticesTexture()
+      loop()
+    })
+    // return 3dCockpit
+    return { 
+      setAnimProgress: (destination, duration) => {
+        duration = duration || 0
+        // TBD: smooth
+        progress = destination
+      },
+      quit: () => { 
+        quit = true 
+      }
     }
+  } else {
+    return undefined
   }
 }

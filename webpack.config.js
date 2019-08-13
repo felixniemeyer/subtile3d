@@ -6,7 +6,7 @@ module.exports = {
   },
   mode: 'development',
   context: __dirname,
-  entry: './src/3d.js',
+  entry: './src/subtile3d.js',
   devtool: 'inline-source-map', 
   module: {
     rules: [

@@ -43,6 +43,11 @@ export default function buildShaders(gl) {
   )
   uniLocs.drawVertices = getUniformLocations(
     gl, progs.drawVertices, [
+      'verticesTexture', 
+      'quadCountSqrt',
+      'quadCountSqrtInverse',
+      'vertexCountSqrt',
+      'vertexCountSqrtInverse'
     ]
   )
 
@@ -54,7 +59,8 @@ export default function buildShaders(gl) {
   uniLocs.drawTexture = getUniformLocations(
     gl, progs.drawTexture, [
       'position', 
-      'size'
+      'size',
+      'tex'
     ]
   )
 

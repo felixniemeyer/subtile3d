@@ -42,14 +42,14 @@ float noise (in vec2 st) {
 float water (in vec2 st) {
     float value = 0.5;
     float amplitude = .5;
-	vec2 wave_direction = vec2(1,0);
+	vec2 wave_direction = vec2(0.3,0.2);
 	const mat2 rotation = mat2(COS, SIN, -SIN, COS); 
 
     // Loop of octaves
     for (int i = 0; i < OCTAVES; i++) {
         value += amplitude * noise(st + time * wave_direction / float(i+5) * 5.0);
         st *= 2.0;
-        amplitude *= 0.6;
+        amplitude *= 0.8;
 		wave_direction = rotation * wave_direction;
     }
     return value;
