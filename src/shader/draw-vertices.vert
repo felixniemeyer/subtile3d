@@ -9,6 +9,7 @@ uniform int quadCountSqrt;
 uniform int vertexCountSqrt; 
 uniform float quadCountSqrtInverse;
 uniform float vertexCountSqrtInverse;
+uniform mat4 camera; 
 
 out vec3 edgeDistances;
 out float z;
@@ -24,8 +25,8 @@ void main() {
 
 	int triangleEdgeId = edgeId > 2 ? edgeId - 3 : edgeId; 
 
-	int y = quadId / vertexCountSqrt;
-	int x = quadId - y * vertexCountSqrt; 
+	int y = quadId / quadCountSqrt;
+	int x = quadId - y * quadCountSqrt; 
 
 	// 0--1
 	// | / 3
@@ -65,8 +66,8 @@ void main() {
 	}
 
 	gl_Position = vec4(
-			vec3(edge[0], 0) * vertexCountSqrtInverse * 2.0 - vec3(1,1,0)
-			+ (vertex[0].xyz - vec3(0.5,0.5,0.5)) * 4.0 * quadCountSqrtInverse,
+			vec3(edge[0], 0) * quadCountSqrtInverse * 2.0 - vec3(1,1,0)
+	,//		+ (vertex[0].xyz - vec3(0.5,0.5,0.5)) * 4.0 * quadCountSqrtInverse,
 			1
 		);
 
@@ -75,26 +76,18 @@ void main() {
 				vertex[2].xyz - vertex[0].xyz
 				)
 			);
+
 	
 	// TODO: transform everything
-
+	// DAAAAMN: transformation etc needs to move either in the noise texture calculation
+	// Or in a step between: from the noise to the coordinates incl. transformation
+	// 
+	// Damnit
+	
 	edgeDistances = vec3(0,0,0);
 	vec2 n = normalize(vertex[2].xy - vertex[1].xy);
 	vec2 h = vertex[1].xy - vertex[0].xy;
 	edgeDistances[triangleEdgeId] = length(h - dot(h, n) * n);
-
-	/*/ debug stuff
-	vec4 dp;
- 	if(triangleEdgeId == 0) {
-		dp = vec4(0,0,0,1);
-	} else if (triangleEdgeId == 1) {
-		dp = vec4(0,1,0,1);
-	} else {
-		dp = vec4(1,0,0,1);
-	}
-	float t = float(gl_VertexID) / 1024.0;
-	*/
-	//gl_Position = gl_Position * t + (1.0 -t) * dp;
 
 	z = vertex[0].z;
 }

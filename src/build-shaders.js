@@ -47,7 +47,9 @@ export default function buildShaders(gl) {
       'quadCountSqrt',
       'quadCountSqrtInverse',
       'vertexCountSqrt',
-      'vertexCountSqrtInverse'
+      'vertexCountSqrtInverse',
+      // anim step specific
+      'camera' 
     ]
   )
 

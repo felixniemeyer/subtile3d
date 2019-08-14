@@ -11,7 +11,10 @@ in vec3 normal;
 out vec4 fragColor; 
 
 void main() {
-	vec3 col = baseColor + normal;
+	float edgeDistance = min(min(edgeDistances.x, edgeDistances.y), edgeDistances.z);
+	float transparent = smoothstep(0.01,0.02,edgeDistance);
+	vec3 col = (1.0 - transparent) * (baseColor + normal) + transparent * vec3(1);
+
 
 	//col = pow(col, vec3(0.4545));
 	fragColor = vec4(col, 1);

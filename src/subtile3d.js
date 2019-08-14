@@ -1,6 +1,11 @@
 import buildShaders from './build-shaders.js'
+import { glMatrix, mat4 } from 'gl-matrix'
+glMatrix.setMatrixArrayType(Array) 
 
-// TODO: tidy up function, e.g. deleteBuffer(vb)...
+console.log('glMatrix', glMatrix)
+console.log('mat4', mat4)
+
+// Maydo TODO: tidy up function, e.g. deleteBuffer(vb)...
 
 export function useCanvas(canvas) {
   const maxResolution = 4096
@@ -74,7 +79,7 @@ export function useCanvas(canvas) {
     gl.bindVertexArray(verticesVao) 
 
     let vb = gl.createBuffer()
-    let vertexData = new Uint16Array(vertexCount * 6)
+    let vertexData = new Uint16Array(quadCount * 6)
     /*
     for(var x = 0; x < quadCountSqrt; x++) {
       for(var y = 0; y < quadCountSqrt; y++) {
@@ -181,7 +186,7 @@ export function useCanvas(canvas) {
   }
 
   const draw = () => {
-    //clearFrameBuffer()
+    clearFrameBuffer()
     calculateVertices()
     drawVertices()
     // drawVerticesTexture()
@@ -212,13 +217,41 @@ export function useCanvas(canvas) {
     gl.bindFramebuffer(gl.FRAMEBUFFER, gl.NULL)
     gl.viewport(0, 0, resolution, resolution) 
 
-    gl.useProgram(shader.progs.drawVertices)
+    chooseProgram()
+    
 
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, verticesTexture)
 
     gl.bindVertexArray(verticesVao) 
-    gl.drawArrays(gl.TRIANGLES, 0, vertexCount * 6)
+    gl.drawArrays(gl.TRIANGLES, 0, quadCount * 6)
+  }
+
+  const chooseProgram = () => {
+    
+    gl.useProgram(shader.progs.drawVertices)
+    let perspective = [
+      1,	0,	0,	0,
+      0,	1,	0,	0,
+      0,	0,	1, 0,
+      0,  0,  0,  1
+    ]
+    let lookAt = [] 
+    let camera = []
+    mat4.lookAt(
+      lookAt,
+      [0.0,	  0,	0.5 ],	
+      [-0.2,	0,	0   ],	
+      [0,	    1,	0   ]
+    )
+    mat4.mul(
+      camera,
+      perspective,
+      lookAt, 
+    )
+
+    gl.uniformMatrix4fv(shader.uniLocs.drawVertices.camera, false, camera) 
+        
   }
 
   const drawVerticesTexture = () => {
