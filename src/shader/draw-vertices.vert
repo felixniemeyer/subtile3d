@@ -59,21 +59,18 @@ void main() {
 		edge[2] = vec2(1, 1);
 	}
 
+	vec3 coords[3]; 
 	for(int i = 0; i < 3; i++) {
 		// edge[i] *= 0.9; //debug
 		edge[i] = edge[i] + vec2(float(x), float(y));
 		vertex[i] = texture(verticesTexture, edge[i] * vertexCountSqrtInverse);
+		coords[i] = vec3(edge[i], 0) * quadCountSqrtInverse * 2.0 - vec3(1,1,0)
+			+ (vertex[i].xyz - vec3(0.5,0.5,0.5)) * 4.0 * quadCountSqrtInverse;
 	}
 
-	gl_Position = vec4(
-			vec3(edge[0], 0) * quadCountSqrtInverse * 2.0 - vec3(1,1,0)
-	,//		+ (vertex[0].xyz - vec3(0.5,0.5,0.5)) * 4.0 * quadCountSqrtInverse,
-			1
-		);
-
 	normal = normalize( cross(
-				vertex[1].xyz - vertex[0].xyz,
-				vertex[2].xyz - vertex[0].xyz
+				coords[1].xyz - coords[0].xyz,
+				coords[2].xyz - coords[0].xyz
 				)
 			);
 
@@ -84,6 +81,15 @@ void main() {
 	// 
 	// Damnit
 	
+	for(int i = 0; i < 3; i++) {
+		vec4 transformed = camera * vec4(coords[i], 1);
+		coords[i] = transformed.xyz;
+		coords[i].x /= ( -coords[i].z + 1.0 ) * 1.2;
+		coords[i].y /= ( -coords[i].z + 1.0 ) * 0.5;
+	}
+	
+	gl_Position = vec4(coords[0], 1);
+
 	edgeDistances = vec3(0,0,0);
 	vec2 n = normalize(vertex[2].xy - vertex[1].xy);
 	vec2 h = vertex[1].xy - vertex[0].xy;

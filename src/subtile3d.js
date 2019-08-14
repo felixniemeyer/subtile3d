@@ -240,8 +240,8 @@ export function useCanvas(canvas) {
     let camera = []
     mat4.lookAt(
       lookAt,
-      [0.0,	  0,	0.5 ],	
-      [-0.2,	0,	0   ],	
+      [0.0,	  0,	0.2 ],	
+      [-0.1, 	  0,	0   ],	
       [0,	    1,	0   ]
     )
     mat4.mul(
