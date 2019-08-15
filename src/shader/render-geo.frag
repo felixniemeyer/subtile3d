@@ -5,7 +5,6 @@ precision mediump float;
 const vec3 baseColor = vec3(0.4, 0.0, 0.1);
 
 uniform float pixelSize; 
-uniform float resolution; 
 uniform float progress; 
 
 in vec3 edgeDistances; 
@@ -17,7 +16,7 @@ out vec4 fragColor;
 void main() {
 	vec3 col = baseColor + (normal);
 
-	float border = 0.035 - 0.072 * progress - 0.091 * z; 
+	float border = 0.040 - 0.072 * progress - 0.091 * z; 
 	float edgeDistance = min(min(edgeDistances.x, edgeDistances.y), edgeDistances.z);
 
 

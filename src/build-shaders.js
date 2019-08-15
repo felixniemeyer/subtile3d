@@ -1,7 +1,7 @@
 import { createProgramFromSources } from './3rd-party/shader-program-build-tool.js'
 
-import vsPlasma from './shader/plasma.vert'
-import fsPlasma from './shader/plasma.frag'
+import vsGenPlasma from './shader/gen-plasma.vert'
+import fsGenPlasma from './shader/gen-plasma.frag'
 
 import vsGenGeo from './shader/gen-geo.vert'
 import fsGenGeo from './shader/gen-geo.frag'
@@ -27,9 +27,10 @@ export default function buildShaders(gl) {
   var progs = {}
   var uniLocs = {}
 
+  console.log('building shader', 'genPlasma')
   progs.genPlasma = createProgramFromSources(gl, [
-      vsPlasma, 
-      fsPlasma
+      vsGenPlasma, 
+      fsGenPlasma
     ]
   )
   uniLocs.genPlasma = getUniformLocations(
@@ -39,6 +40,7 @@ export default function buildShaders(gl) {
     ]
   )
 
+  console.log('building shader', 'genGeo')
   progs.genGeo = createProgramFromSources(gl, [
       vsGenGeo, 
       fsGenGeo
@@ -46,9 +48,16 @@ export default function buildShaders(gl) {
   )
   uniLocs.genGeo = getUniformLocations(
     gl, progs.plasma, [
+      'plasmaTex',
+      'quadCountSqrt',
+      'quadCountSqrtInverse',
+      'vertexCountSqrtInverse',
+      'flatness',
+      'camera'
     ]
   )
 
+  console.log('building shader', 'renderGeo')
   progs.renderGeo = createProgramFromSources(gl, [
       vsRenderGeo, 
       fsRenderGeo
@@ -56,18 +65,19 @@ export default function buildShaders(gl) {
   )
   uniLocs.renderGeo = getUniformLocations(
     gl, progs.renderGeo, [
-      'verticesTexture', 
+      // vs
       'quadCountSqrt',
-      'quadCountSqrtInverse',
-      'vertexCountSqrt',
-      'vertexCountSqrtInverse',
-      // anim step specific
-      'camera',
+      'geoTexV0', 
+      'geoTexV1',
+      'geoTexV2',
+      'geoTexLookAt',
+      //fs
       'progress',
       'pixelSize'
     ]
   )
 
+  console.log('building shader', 'dbgTex')
   progs.dbgTex = createProgramFromSources(gl, [
       vsDbgTex, 
       fsDbgTex
