@@ -2,7 +2,11 @@
 
 precision mediump float;
 
-const vec3 baseColor = vec3(0.1, 0.0, 0.1);
+const vec3 baseColor = vec3(0.4, 0.0, 0.1);
+
+uniform float pixelSize; 
+uniform float resolution; 
+uniform float progress; 
 
 in vec3 edgeDistances; 
 in float z; 
@@ -12,15 +16,13 @@ out vec4 fragColor;
 
 void main() {
 	vec3 col = baseColor + normal;
-	/*
-	float pixelsize = 2.0 / 512.0; //provide with uniform 1 / res
-	float border = 5.0 * pixelsize; 
 
+	float border = 0.1 - 0.068 * progress - 0.051 * z; //( thickness - 10.0 * z ) * pixelSize; 
 	float edgeDistance = min(min(edgeDistances.x, edgeDistances.y), edgeDistances.z);
-	*/
-	float opacity = 1.0; //smoothstep(border, border - 2.0 * pixelsize,edgeDistance);
 
 	col = pow(col, vec3(0.4545));
 
-	fragColor = vec4(col, 1);
+	float opacity = ( z + 0.65 + progress * 0.3 ) * smoothstep(border, border - 2.0 * pixelSize, edgeDistance); 
+
+	fragColor = vec4(col, opacity);
 }

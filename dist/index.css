@@ -4,9 +4,15 @@ body {
 #canvas {
 	height: 600px; 
 	width: 600px; 
+	position: fixed;
+	margin: 0px; 
+	top: 0px; 
+	right: 0px; 
+	pointer-events: none; 
 }
 
 #control-panel {
+	z-index: 1; 
 }
 
 .button {

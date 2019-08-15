@@ -32,7 +32,7 @@ export default function buildShaders(gl) {
   uniLocs.calculateVertices = getUniformLocations(
     gl, progs.calculateVertices, [
       'time',
-      'progress'
+      'turbulence'
     ]
   )
 
@@ -49,7 +49,9 @@ export default function buildShaders(gl) {
       'vertexCountSqrt',
       'vertexCountSqrtInverse',
       // anim step specific
-      'camera' 
+      'camera',
+      'progress',
+      'pixelSize'
     ]
   )
 

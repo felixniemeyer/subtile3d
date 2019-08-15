@@ -13,16 +13,30 @@
 			// 3d.setAnimProgress(0..7) 
 			var controlPanel = document.getElementById('control-panel')
 			var i, button; 
+		
 			for(i = 0; i < 8; i++){
 				button = document.createElement('div')
 				button.classList.add('button') 
 				button.addEventListener('click', ((progress) => { 
-						() => s3d.setAnimProgress(progress) 
+					return () => { 
+						s3d.setAnimProgress(progress * 0.99, 2) 
+					}
 					})(i)
 				)
 				button.textContent = i
 				controlPanel.appendChild(button) 
 			}
+			
+			const resize = () => {
+				canvas.setAttribute("style", `
+					width: ${window.innerHeight}px; 
+					height: ${window.innerHeight}px;
+				`)
+			}
+
+			window.addEventListener('resize', resize )
+
+			resize()
 		})
 	</script>
 	<div id="control-panel">

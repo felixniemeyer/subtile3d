@@ -2,9 +2,6 @@ import buildShaders from './build-shaders.js'
 import { glMatrix, mat4 } from 'gl-matrix'
 glMatrix.setMatrixArrayType(Array) 
 
-console.log('glMatrix', glMatrix)
-console.log('mat4', mat4)
-
 // Maydo TODO: tidy up function, e.g. deleteBuffer(vb)...
 
 export function useCanvas(canvas) {
@@ -167,10 +164,25 @@ export function useCanvas(canvas) {
   let time = 0
   const loop = () => {
     time = (Date.now() - t0) / 1000
+    updateProgress()
     resize()
     draw()
     if(!quit) {
       window.requestAnimationFrame(loop)
+    }
+  }
+
+  let progChangeT0 = 0
+  let progChangeV0 = 0
+  let progChangeT = 0
+  let progChangeV = 0
+  const updateProgress = () => {
+    if(time > progChangeT) {
+      progress = progChangeV
+    } else {
+      let r = ( time - progChangeT0 ) / (progChangeT - progChangeT0) 
+      r = r * r * (3.0 - 2.0 * r)
+      progress = r * progChangeV + (1 - r) * progChangeV0
     }
   }
 
@@ -185,7 +197,9 @@ export function useCanvas(canvas) {
     }
   }
 
+  let sceneProgress
   const draw = () => {
+    sceneProgress = progress % 1
     clearFrameBuffer()
     calculateVertices()
     drawVertices()
@@ -195,9 +209,7 @@ export function useCanvas(canvas) {
   const clearFrameBuffer = () => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, gl.NULL)
     gl.viewport(0,0,resolution,resolution)
-    gl.clearColor(0.30,0.30,0.30,1)
-    console.log('clear') 
-    gl.clearDepth(0)
+    gl.clearColor(1,1,1,0)
     gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
   }
 
@@ -208,6 +220,8 @@ export function useCanvas(canvas) {
     gl.useProgram(shader.progs.calculateVertices)
     // uniforms
     gl.uniform1f(shader.uniLocs.calculateVertices.time, time) 
+    let turbulence = 0.5 + 0.6*Math.max(0, 1 - Math.pow(progress - 1, 2))
+    gl.uniform1f(shader.uniLocs.calculateVertices.turbulence, turbulence) 
     
     gl.bindVertexArray(quadVao) 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
@@ -223,8 +237,12 @@ export function useCanvas(canvas) {
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, verticesTexture)
 
+    gl.enable(gl.DEPTH_TEST) 
+
     gl.bindVertexArray(verticesVao) 
     gl.drawArrays(gl.TRIANGLES, 0, quadCount * 6)
+
+    gl.disable(gl.DEPTH_TEST)
   }
 
   const chooseProgram = () => {
@@ -238,12 +256,14 @@ export function useCanvas(canvas) {
     ]
     let lookAt = [] 
     let camera = []
+
     mat4.lookAt(
       lookAt,
-      [0.0,	  0,	0.2 ],	
-      [-0.1, 	  0,	0   ],	
+      [0.5 - 0.2 * sceneProgress,	  0, 0.25 - 0.18 * sceneProgress],	
+      [0 + sceneProgress * 0.05, 	  0,	0   ],	
       [0,	    1,	0   ]
     )
+
     mat4.mul(
       camera,
       perspective,
@@ -251,6 +271,12 @@ export function useCanvas(canvas) {
     )
 
     gl.uniformMatrix4fv(shader.uniLocs.drawVertices.camera, false, camera) 
+    gl.uniform1f(shader.uniLocs.drawVertices.pixelSize, 2.0 / resolution)
+    gl.uniform1f(shader.uniLocs.drawVertices.resolution, resolution)
+    gl.uniform1f(shader.uniLocs.drawVertices.progress, sceneProgress)
+    console.log(sceneProgress) 
+    //( resolution / 600 ) * (23 - sceneProgress * 17))
+
         
   }
 
@@ -278,8 +304,10 @@ export function useCanvas(canvas) {
     return { 
       setAnimProgress: (destination, duration) => {
         duration = duration || 0
-        // TBD: smooth
-        progress = destination
+        progChangeV0 = progress
+        progChangeT0 = time
+        progChangeT = time + duration
+        progChangeV = destination
       },
       quit: () => { 
         quit = true 

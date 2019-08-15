@@ -84,16 +84,16 @@ void main() {
 	for(int i = 0; i < 3; i++) {
 		vec4 transformed = camera * vec4(coords[i], 1);
 		coords[i] = transformed.xyz;
-		coords[i].x /= ( -coords[i].z + 1.0 ) * 1.2;
-		coords[i].y /= ( -coords[i].z + 1.0 ) * 0.5;
+		coords[i].x /= ( -coords[i].z + 1.0 ) * 0.4;
+		coords[i].y /= ( -coords[i].z + 1.0 ) * 0.4;
 	}
 	
-	gl_Position = vec4(coords[0], 1);
+	gl_Position = vec4(coords[0].xy, -coords[0].z * 0.1, 1);
 
 	edgeDistances = vec3(0,0,0);
-	vec2 n = normalize(vertex[2].xy - vertex[1].xy);
-	vec2 h = vertex[1].xy - vertex[0].xy;
+	vec2 n = normalize(coords[2].xy - coords[1].xy);
+	vec2 h = coords[1].xy - coords[0].xy;
 	edgeDistances[triangleEdgeId] = length(h - dot(h, n) * n);
 
-	z = vertex[0].z;
+	z = coords[0].z;
 }

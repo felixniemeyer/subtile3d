@@ -3,7 +3,7 @@
 precision mediump float;
 
 uniform float time;
-uniform float progress; 
+uniform float turbulence; 
 
 in vec2 st;
 
@@ -49,7 +49,7 @@ float water (in vec2 st) {
     for (int i = 0; i < OCTAVES; i++) {
         value += amplitude * noise(st + time * wave_direction / float(i+5) * 5.0);
         st *= 2.0;
-        amplitude *= 0.8;
+        amplitude *= turbulence;
 		wave_direction = rotation * wave_direction;
     }
     return value;
