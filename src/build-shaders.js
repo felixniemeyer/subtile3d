@@ -87,7 +87,9 @@ export default function buildShaders(gl) {
     gl, progs.dbgTex, [
       'position', 
       'size',
-      'tex'
+      'tex',
+      'valueShift', 
+      'valueScale'
     ]
   )
 

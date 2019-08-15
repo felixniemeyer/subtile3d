@@ -4,6 +4,7 @@ glMatrix.setMatrixArrayType(Array)
 
 // Maydo TODO: tidy up function, e.g. deleteBuffer(vb)...
 
+
 export function useCanvas(canvas) {
   const maxResolution = 4096
   const quadCountSqrt = Math.pow(2, 5) 
@@ -12,6 +13,7 @@ export function useCanvas(canvas) {
   const quadCount = Math.pow(quadCountSqrt, 2)
 
   let gl = undefined
+  const GL_TEX = []
   const initGl = () => {
     gl = canvas.getContext("webgl2", {
       preserveDrawingBuffer: true,
@@ -22,6 +24,8 @@ export function useCanvas(canvas) {
       console.error("could not get webgl2 content")
       return false
     }
+
+    for(let t of [gl.TEXTURE0, gl.TEXTURE1, gl.TEXTURE2, gl.TEXTURE3]) GL_TEX.push(t)
     
     var ext = gl.getExtension('EXT_color_buffer_float')
     if (!ext) {
@@ -68,6 +72,8 @@ export function useCanvas(canvas) {
     // dynamic
     gl.uniform2fv(shader.uniLocs.dbgTex.position, [0.1, 0.6])
     gl.uniform2fv(shader.uniLocs.dbgTex.size, [0.2, 0.2])
+    gl.uniform4fv(shader.uniLocs.dbgTex.valueScale, [1,0,0,1])
+    gl.uniform4fv(shader.uniLocs.dbgTex.valueShift, [0,0,0,1])
   }
   
   const initVaos = () => {
@@ -305,8 +311,8 @@ export function useCanvas(canvas) {
     gl.uniform1f(shader.uniLocs.renderGeo.resolution, resolution)
     gl.uniform1f(shader.uniLocs.renderGeo.progress, sceneProgress)
 
-    for(let i = 0; i < 4; i++) {
-      gl.activeTexture(gl.TEXTURE0 + i)
+    for(let i = 0; i < geoTexCount; i++) {
+      gl.activeTexture(GL_TEX[i] + i)
       gl.bindTexture(gl.TEXTURE_2D, geoTex[i])
     }
 
@@ -324,7 +330,7 @@ export function useCanvas(canvas) {
 
     gl.useProgram(shader.progs.dbgTex) 
 
-    gl.uniform2fv(shader.uniLocs.dbgTex.position, [0.1, 0.6])
+    gl.uniform2fv(shader.uniLocs.dbgTex.position, [0.4, 0.6])
     gl.uniform2fv(shader.uniLocs.dbgTex.size, [0.2, 0.2])
 
     gl.activeTexture(gl.TEXTURE0)
@@ -337,13 +343,15 @@ export function useCanvas(canvas) {
   const dbgGeo = () => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, gl.NULL)
     gl.viewport(0, 0, resolution, resolution)
-    gl.useProgram(shader.progs.dbgTex) 
-    for(let i = 0; i < 4; i++) {
-      gl.activeTexture(gl.TEXTURE0)
+
+    for(let i = 0; i < geoTexCount; i++) {
+      gl.useProgram(shader.progs.dbgTex) 
+
+      gl.activeTexture(GL_TEX[i])
       gl.bindTexture(gl.TEXTURE_2D, geoTex[i])
 
       gl.uniform2fv(shader.uniLocs.dbgTex.position, [0.1, 0.1 + 0.2 * i])
-      gl.uniform2fv(shader.uniLocs.dbgTex.size, [0.1, 0.2])
+      gl.uniform2fv(shader.uniLocs.dbgTex.size, [0.2, 0.1])
 
       gl.bindVertexArray(quadVao)
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4) 

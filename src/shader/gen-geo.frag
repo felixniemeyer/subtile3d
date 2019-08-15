@@ -81,6 +81,12 @@ void main() {
 		edgeDistance[i] = length(h - dot(h, n) * n);
 	}
 
+	//debug: 
+	/* for(int i = 0; i < 3; i++) {
+		coords[i] = vec3(0,0,0);
+		edgeDistance[i] = 1.0;
+	} */
+
 	v0 = vec4(coords[0], edgeDistance[0]);
 	v1 = vec4(coords[1], edgeDistance[1]);
 	v2 = vec4(coords[2], edgeDistance[2]);
