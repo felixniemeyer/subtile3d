@@ -312,7 +312,7 @@ export function useCanvas(canvas) {
     gl.uniform1f(shader.uniLocs.renderGeo.progress, sceneProgress)
 
     for(let i = 0; i < geoTexCount; i++) {
-      gl.activeTexture(GL_TEX[i] + i)
+      gl.activeTexture(GL_TEX[i])
       gl.bindTexture(gl.TEXTURE_2D, geoTex[i])
     }
 
