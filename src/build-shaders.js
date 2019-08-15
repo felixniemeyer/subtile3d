@@ -47,7 +47,7 @@ export default function buildShaders(gl) {
     ]
   )
   uniLocs.genGeo = getUniformLocations(
-    gl, progs.plasma, [
+    gl, progs.genPlasma, [
       'plasmaTex',
       'quadCountSqrt',
       'quadCountSqrtInverse',

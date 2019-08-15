@@ -53,8 +53,8 @@ void main() {
 	vec3 c02 = coords[2] - coords[0];
 	// instead of a normal: calculate a point with same distance to all points. 
 	lookAt = vec4(
-		(coords[1] + coords[2] + coords[3]) / 3.0 
-		+ (cross(c01, c02) * quadCount * flatness ) // ' * quadCount' calibrates so that the lookAt is about as far away as the points are distant from each other
+		(coords[0] + coords[1] + coords[2]) / 3.0 
+		+ (cross(c01, c02) * quadCountSqrt * flatness ) // ' * quadCount' calibrates so that the lookAt is about as far away as the points are distant from each other
 		, 1);
 
 
@@ -71,13 +71,14 @@ void main() {
 
 	// edge distance calculation
 	
+	int e1, e2;
 	vec2 n, h; 
 	for(int i = 0; i < 3; i++) {
 		e1 = i + 1 > 2 ? 0 : i + 1;
 		e2 = i + 2 > 2 ? i - 1 : 2;
 		vec2 n = normalize(coords[e2].xy - coords[e1].xy);
 		vec2 h = coords[e1].xy - coords[i].xy;
-		edgeDistances[i] = length(h - dot(h, n) * n);
+		edgeDistance[i] = length(h - dot(h, n) * n);
 	}
 
 	v0 = vec4(coords[0], edgeDistance[0]);

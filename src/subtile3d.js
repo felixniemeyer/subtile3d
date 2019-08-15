@@ -248,7 +248,7 @@ export function useCanvas(canvas) {
     genPlasma()
     genGeometry()
     renderGeometry()
-    // dbgPlasma()
+    dbgPlasma()
     dbgGeo()
   }
   
@@ -275,7 +275,7 @@ export function useCanvas(canvas) {
 
   const genGeometry = () => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, geoFb) 
-    gl.viewport(quadCountSqrt * 2, quadCountSqrt) 
+    gl.viewport(0, 0, quadCountSqrt * 2, quadCountSqrt) 
 
     gl.useProgram(shader.progs.genGeo) 
     
@@ -316,12 +316,6 @@ export function useCanvas(canvas) {
     gl.drawArrays(gl.TRIANGLES, 0, quadCount * 6)
 
     gl.disable(gl.DEPTH_TEST)
-  }
-
-  const chooseProgram = () => {
-    
-
-        
   }
 
   const dbgPlasma = () => {

@@ -9,9 +9,15 @@ uniform sampler2D geoTexV1;
 uniform sampler2D geoTexV2;
 uniform sampler2D geoTexLookAt;
 
+uniform int quadCountSqrt;
+
 out vec3 edgeDistances;
 out float z;
 out vec3 normal; 
+
+int imod(in int a, in int div) {
+	return a - (a / div) * div;
+}
 
 void main() {
 	int quadId = gl_VertexID / 6;
@@ -23,7 +29,7 @@ void main() {
 	}
 
 	vec2 st = vec2(
-		float(mod(quadId, quadCountSqrt)) + sOffset,
+		float(imod(quadId, quadCountSqrt) + sOffset),
 		float(quadId / quadCountSqrt)
 	);
 	st = st + vec2(0.5);
@@ -46,10 +52,10 @@ void main() {
 		1 // don't do perspective transformation - we've done it!
 	); 
 
-	normal = normalize(lookAt - v) 
+	normal = normalize(lookAt.xyz - v.xyz);
 
 	edgeDistances = vec3(0, 0, 0);
 	edgeDistances[edgeId] = v.w;
 
-	z = coords[0].z;
+	z = v.z;
 }
