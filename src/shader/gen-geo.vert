@@ -11,6 +11,13 @@ uniform float quadCountSqrtInverse;
 uniform float vertexCountSqrtInverse;
 uniform mat4 camera; 
 
+const mat4 perspective = mat4(
+	1,0,0,0,
+	0,1,0,0,
+	0,0,1,-0.4,
+	0,0,0,1
+);
+
 out vec3 edgeDistances;
 out float z;
 out vec3 normal; 
@@ -68,11 +75,12 @@ void main() {
 			+ (vertex[i].xyz - vec3(0.5,0.5,0.5)) * 4.0 * quadCountSqrtInverse;
 	}
 
-	normal = normalize( cross(
-				coords[1].xyz - coords[0].xyz,
-				coords[2].xyz - coords[0].xyz
-				)
-			);
+	vec3 v01 =coords[1].xyz - coords[0].xyz;
+	vec3 v02 =coords[2].xyz - coords[0].xyz;
+				
+				
+	normal = normalize( cross(v01, v02));
+	//normal = 0.1 * (normalize( 0.33 * (coords[0] + coords[1] + coords[2]) - coords[0]) + 9.0 * normal);
 
 	
 	// TODO: transform everything
@@ -81,19 +89,21 @@ void main() {
 	// 
 	// Damnit
 	
+	vec4 transformed[3];
 	for(int i = 0; i < 3; i++) {
-		vec4 transformed = camera * vec4(coords[i], 1);
-		coords[i] = transformed.xyz;
-		coords[i].x /= ( -coords[i].z + 1.0 ) * 0.4;
-		coords[i].y /= ( -coords[i].z + 1.0 ) * 0.4;
+		transformed[i] = perspective * camera * vec4(coords[i], 1);
+		//coords[i].x /= ( -coords[i].z + 1.0 ) * 0.4;
+		//coords[i].y /= ( -coords[i].z + 1.0 ) * 0.4;
 	}
 	
-	gl_Position = vec4(coords[0].xy, -coords[0].z * 0.1, 1);
+	gl_Position = transformed[0];//vec4(coords[0].xy, -coords[0].z * 0.1, -coords[0].z);
 
 	edgeDistances = vec3(0,0,0);
 	vec2 n = normalize(coords[2].xy - coords[1].xy);
 	vec2 h = coords[1].xy - coords[0].xy;
 	edgeDistances[triangleEdgeId] = length(h - dot(h, n) * n);
+
+	//edge distance: see sof/41851699/gles-and-noperspective
 
 	z = coords[0].z;
 }

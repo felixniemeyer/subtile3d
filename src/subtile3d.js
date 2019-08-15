@@ -44,25 +44,29 @@ export function useCanvas(canvas) {
   const initShaderPrograms = () => {
     shader = buildShaders(gl)
 
-    gl.useProgram(shader.progs.calculateVertices)
+    gl.useProgram(shader.progs.genPlasma)
     // static
     // dynamic
-    gl.uniform1f(shader.uniLocs.calculateVertices.time, 0)
-    gl.uniform1f(shader.uniLocs.calculateVertices.progress, 0)
+    gl.uniform1f(shader.uniLocs.genPlasma.time, 0)
+    gl.uniform1f(shader.uniLocs.genPlasma.progress, 0)
 
-    gl.useProgram(shader.progs.drawVertices)
+    gl.useProgram(shader.progs.genGeo)
+    // static 
+    // dynamic 
+
+    gl.useProgram(shader.progs.renderGeo)
     // static
-    gl.uniform1i(shader.uniLocs.drawVertices.quadCountSqrt, quadCountSqrt)
-    gl.uniform1i(shader.uniLocs.drawVertices.vertexCountSqrt, vertexCountSqrt)
-    gl.uniform1f(shader.uniLocs.drawVertices.quadCountSqrtInverse, 1.0 / quadCountSqrt)
-    gl.uniform1f(shader.uniLocs.drawVertices.vertexCountSqrtInverse, 1.0 / vertexCountSqrt)
+    gl.uniform1i(shader.uniLocs.renderGeo.quadCountSqrt, quadCountSqrt)
+    gl.uniform1i(shader.uniLocs.renderGeo.vertexCountSqrt, vertexCountSqrt)
+    gl.uniform1f(shader.uniLocs.renderGeo.quadCountSqrtInverse, 1.0 / quadCountSqrt)
+    gl.uniform1f(shader.uniLocs.renderGeo.vertexCountSqrtInverse, 1.0 / vertexCountSqrt)
     // dynamic 
     
-    gl.useProgram(shader.progs.drawTexture)
+    gl.useProgram(shader.progs.dbgTex)
     // static
     // dynamic
-    gl.uniform2fv(shader.uniLocs.drawTexture.position, [0.1, 0.6])
-    gl.uniform2fv(shader.uniLocs.drawTexture.size, [0.2, 0.2])
+    gl.uniform2fv(shader.uniLocs.dbgTex.position, [0.1, 0.6])
+    gl.uniform2fv(shader.uniLocs.dbgTex.size, [0.2, 0.2])
   }
   
   const initGeometry = () => {
@@ -201,9 +205,10 @@ export function useCanvas(canvas) {
   const draw = () => {
     sceneProgress = progress % 1
     clearFrameBuffer()
-    calculateVertices()
-    drawVertices()
-    // drawVerticesTexture()
+    genPlasma()
+    genGeometry()
+    renderGeometry()
+    // drawTexture()
   }
   
   const clearFrameBuffer = () => {
@@ -213,26 +218,29 @@ export function useCanvas(canvas) {
     gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
   }
 
-  const calculateVertices = () => {
+  const genPlasma = () => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, verticesFramebuffer)
     gl.viewport(0,0,vertexCountSqrt,vertexCountSqrt)
 
-    gl.useProgram(shader.progs.calculateVertices)
+    gl.useProgram(shader.progs.genPlasma)
     // uniforms
-    gl.uniform1f(shader.uniLocs.calculateVertices.time, time) 
-    let turbulence = 0.5 + 0.6*Math.max(0, 1 - Math.pow(progress - 1, 2))
-    gl.uniform1f(shader.uniLocs.calculateVertices.turbulence, turbulence) 
+    gl.uniform1f(shader.uniLocs.genPlasma.time, time) 
+    let turbulence = 0.7 + 0.3*Math.max(0, 1 - Math.pow(progress - 1, 2))
+    gl.uniform1f(shader.uniLocs.genPlasma.turbulence, turbulence) 
     
     gl.bindVertexArray(quadVao) 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
   }
 
-  const drawVertices = () => {
+  const genGeometry = () => {
+
+  }
+
+  const renderGeometry = () => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, gl.NULL)
     gl.viewport(0, 0, resolution, resolution) 
 
     chooseProgram()
-    
 
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, verticesTexture)
@@ -247,7 +255,7 @@ export function useCanvas(canvas) {
 
   const chooseProgram = () => {
     
-    gl.useProgram(shader.progs.drawVertices)
+    gl.useProgram(shader.progs.renderGeo)
     let perspective = [
       1,	0,	0,	0,
       0,	1,	0,	0,
@@ -259,8 +267,8 @@ export function useCanvas(canvas) {
 
     mat4.lookAt(
       lookAt,
-      [0.5 - 0.2 * sceneProgress,	  0, 0.25 - 0.18 * sceneProgress],	
-      [0 + sceneProgress * 0.05, 	  0,	0   ],	
+      [1.2 - 0.2 * sceneProgress,	  0, 1.05 - 0.6 * sceneProgress],	
+      [0 + sceneProgress * 0.15, 	  0,	0   ],	
       [0,	    1,	0   ]
     )
 
@@ -270,21 +278,21 @@ export function useCanvas(canvas) {
       lookAt, 
     )
 
-    gl.uniformMatrix4fv(shader.uniLocs.drawVertices.camera, false, camera) 
-    gl.uniform1f(shader.uniLocs.drawVertices.pixelSize, 2.0 / resolution)
-    gl.uniform1f(shader.uniLocs.drawVertices.resolution, resolution)
-    gl.uniform1f(shader.uniLocs.drawVertices.progress, sceneProgress)
+    gl.uniformMatrix4fv(shader.uniLocs.renderGeo.camera, false, camera) 
+    gl.uniform1f(shader.uniLocs.renderGeo.pixelSize, 2.0 / resolution)
+    gl.uniform1f(shader.uniLocs.renderGeo.resolution, resolution)
+    gl.uniform1f(shader.uniLocs.renderGeo.progress, sceneProgress)
     console.log(sceneProgress) 
     //( resolution / 600 ) * (23 - sceneProgress * 17))
 
         
   }
 
-  const drawVerticesTexture = () => {
+  const drawTexture = () => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, gl.NULL)
     gl.viewport(0, 0, resolution, resolution)
 
-    gl.useProgram(shader.progs.drawTexture) 
+    gl.useProgram(shader.progs.dbgTex) 
 
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, verticesTexture)

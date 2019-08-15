@@ -1,13 +1,16 @@
 import { createProgramFromSources } from './3rd-party/shader-program-build-tool.js'
 
-import vsDrawVertices from './shader/draw-vertices.vert'
-import fsDrawVertices from './shader/draw-vertices.frag'
+import vsPlasma from './shader/plasma.vert'
+import fsPlasma from './shader/plasma.frag'
 
-import vsCalculateVertices from './shader/calculate-vertices.vert'
-import fsCalculateVertices from './shader/calculate-vertices.frag'
+import vsGenGeo from './shader/gen-geo.vert'
+import fsGenGeo from './shader/gen-geo.frag'
 
-import vsDrawTexture from './shader/draw-texture.vert'
-import fsDrawTexture from './shader/draw-texture.frag'
+import vsRenderGeo from './shader/render-geo.vert'
+import fsRenderGeo from './shader/render-geo.frag'
+
+import vsDbgTex from './shader/dbg-tex.vert'
+import fsDbgTex from './shader/dbg-tex.frag'
 
 // import shader pieces and combine them together for transitions
 
@@ -24,25 +27,35 @@ export default function buildShaders(gl) {
   var progs = {}
   var uniLocs = {}
 
-  progs.calculateVertices = createProgramFromSources(gl, [
-      vsCalculateVertices, 
-      fsCalculateVertices
+  progs.genPlasma = createProgramFromSources(gl, [
+      vsPlasma, 
+      fsPlasma
     ]
   )
-  uniLocs.calculateVertices = getUniformLocations(
-    gl, progs.calculateVertices, [
+  uniLocs.genPlasma = getUniformLocations(
+    gl, progs.genPlasma, [
       'time',
       'turbulence'
     ]
   )
 
-  progs.drawVertices = createProgramFromSources(gl, [
-      vsDrawVertices, 
-      fsDrawVertices
+  progs.genGeo = createProgramFromSources(gl, [
+      vsGenGeo, 
+      fsGenGeo
     ]
   )
-  uniLocs.drawVertices = getUniformLocations(
-    gl, progs.drawVertices, [
+  uniLocs.genGeo = getUniformLocations(
+    gl, progs.plasma, [
+    ]
+  )
+
+  progs.renderGeo = createProgramFromSources(gl, [
+      vsRenderGeo, 
+      fsRenderGeo
+    ]
+  )
+  uniLocs.renderGeo = getUniformLocations(
+    gl, progs.renderGeo, [
       'verticesTexture', 
       'quadCountSqrt',
       'quadCountSqrtInverse',
@@ -55,13 +68,13 @@ export default function buildShaders(gl) {
     ]
   )
 
-  progs.drawTexture = createProgramFromSources(gl, [
-      vsDrawTexture, 
-      fsDrawTexture
+  progs.dbgTex = createProgramFromSources(gl, [
+      vsDbgTex, 
+      fsDbgTex
     ]
   )
-  uniLocs.drawTexture = getUniformLocations(
-    gl, progs.drawTexture, [
+  uniLocs.dbgTex = getUniformLocations(
+    gl, progs.dbgTex, [
       'position', 
       'size',
       'tex'
