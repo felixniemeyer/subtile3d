@@ -16,7 +16,7 @@ out vec4 fragColor;
 void main() {
 	vec3 col = baseColor + (normal);
 
-	float border = 0.040 - 0.072 * progress - 0.091 * z; 
+	float border = 0.045 - 0.072 * progress - 0.091 * z; 
 	float edgeDistance = min(min(edgeDistances.x, edgeDistances.y), edgeDistances.z);
 
 

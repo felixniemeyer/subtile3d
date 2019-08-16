@@ -48,20 +48,13 @@ void main() {
 			+ (plasma[i].xyz - vec3(0.5,0.5,0.5)) * 4.0 * quadCountSqrtInverse; // adding deviation 
 	}
 
-	// model transform 
-	// none
+	// model transform (none) 
 
 	// normal calculation
 	vec3 c01 = coords[1] - coords[0];
 	vec3 c02 = coords[2] - coords[0];
-	// instead of a normal: calculate a point with same distance to all points. 
-	lookAt = vec4(
-		(coords[0] + coords[1] + coords[2]) / 3.0 
-		+ (cross(c01, c02) * float(quadCountSqrt) * flatness ) // ' * quadCount' calibrates so that the lookAt is about as far away as the points are distant from each other
-		, 1);
+	lookAt = vec4(normalize(cross(c01,c02)), 1);
 
-
-	/*
 	// camera transform & perspective
 	float cameraSpread = 0.4;
 	for(int i = 0; i < 3; i++) {
@@ -74,7 +67,6 @@ void main() {
 	}
 
 	// edge distance calculation
-	
 	int e1, e2;
 	vec2 n, h; 
 	for(int i = 0; i < 3; i++) {
@@ -85,13 +77,7 @@ void main() {
 		edgeDistance[i] = length(h - dot(h, n) * n);
 	}
 
-	//debug: 
-	for(int i = 0; i < 3; i++) {
-		coords[i] = vec3(0,0,0);
-		edgeDistance[i] = 1.0;
-	} 
-	*/
-
+	// write out
 	v0 = vec4(coords[0], edgeDistance[0]);
 	v1 = vec4(coords[1], edgeDistance[1]);
 	v2 = vec4(coords[2], edgeDistance[2]);

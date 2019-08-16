@@ -261,8 +261,8 @@ export function useCanvas(canvas) {
     genPlasma()
     genGeometry()
     renderGeometry()
-    dbgPlasma()
-    dbgGeo()
+    // dbgPlasma()
+    // dbgGeo()
   }
   
   const clearScreen = () => {
@@ -279,7 +279,7 @@ export function useCanvas(canvas) {
     gl.useProgram(shader.progs.genPlasma)
     // uniforms
     gl.uniform1f(shader.uniLocs.genPlasma.time, time) 
-    let turbulence = 0.7 + 0.4*Math.max(0, 1 - Math.pow(progress - 1, 2))
+    let turbulence = 0.7 + 0.3*Math.max(0, 1 - Math.pow(progress - 1, 2))
     gl.uniform1f(shader.uniLocs.genPlasma.turbulence, turbulence) 
     
     gl.bindVertexArray(quadVao) 
@@ -302,7 +302,7 @@ export function useCanvas(canvas) {
     mat4.lookAt(
       camera,
       [1.2 - 0.2 * sceneProgress,	  0, 0.95 - 0.6 * sceneProgress],	
-      [0 + sceneProgress * 0.35, 	  0,	0   ],	
+      [0 + sceneProgress * 0.1, 	  0,	0   ],	
       [0,	    1,	0   ]
     )
     gl.uniformMatrix4fv(shader.uniLocs.genGeo.camera, false, camera) 
