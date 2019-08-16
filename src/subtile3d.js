@@ -13,7 +13,8 @@ export function useCanvas(canvas) {
   const quadCount = Math.pow(quadCountSqrt, 2)
 
   let gl = undefined
-  const GL_TEX = []
+  const GL_TEXTURE = []
+  const GL_COLOR_ATTACHMENT = []
   const initGl = () => {
     gl = canvas.getContext("webgl2", {
       preserveDrawingBuffer: true,
@@ -25,7 +26,8 @@ export function useCanvas(canvas) {
       return false
     }
 
-    for(let t of [gl.TEXTURE0, gl.TEXTURE1, gl.TEXTURE2, gl.TEXTURE3]) GL_TEX.push(t)
+    for(let t of [gl.TEXTURE0, gl.TEXTURE1, gl.TEXTURE2, gl.TEXTURE3]) GL_TEXTURE.push(t)
+    for(let t of [gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2, gl.COLOR_ATTACHMENT3]) GL_COLOR_ATTACHMENT.push(t)
     
     var ext = gl.getExtension('EXT_color_buffer_float')
     if (!ext) {
@@ -60,11 +62,17 @@ export function useCanvas(canvas) {
     gl.uniform1f(shader.uniLocs.genGeo.vertexCountSqrtInverse, 1.0 / vertexCountSqrt)
     gl.uniform1f(shader.uniLocs.genGeo.quadCountSqrtInverse, 1.0 / quadCountSqrt)
     // dynamic 
-    gl.uniform1f(shader.uniLocs.genGeo.flatness, 1)
+    gl.uniform1f(shader.uniLocs.genGeo.flatness, 0.8)
 
     gl.useProgram(shader.progs.renderGeo)
     // static
     gl.uniform1i(shader.uniLocs.renderGeo.quadCountSqrt, quadCountSqrt)
+    gl.uniform1f(shader.uniLocs.renderGeo.quadCountSqrtInverse, 1.0 / quadCountSqrt)
+    gl.uniform1i(shader.uniLocs.renderGeo.geoTexV0, 0)
+    gl.uniform1i(shader.uniLocs.renderGeo.geoTexV1, 1)
+    gl.uniform1i(shader.uniLocs.renderGeo.geoTexV2, 2)
+    gl.uniform1i(shader.uniLocs.renderGeo.geoTexLookAt, 3)
+
     // dynamic 
     
     gl.useProgram(shader.progs.dbgTex)
@@ -72,8 +80,8 @@ export function useCanvas(canvas) {
     // dynamic
     gl.uniform2fv(shader.uniLocs.dbgTex.position, [0.1, 0.6])
     gl.uniform2fv(shader.uniLocs.dbgTex.size, [0.2, 0.2])
-    gl.uniform4fv(shader.uniLocs.dbgTex.valueScale, [1,0,0,1])
-    gl.uniform4fv(shader.uniLocs.dbgTex.valueShift, [0,0,0,1])
+    gl.uniform4fv(shader.uniLocs.dbgTex.valueScale, [1,1,1,1])
+    gl.uniform4fv(shader.uniLocs.dbgTex.valueShift, [0,0,0,1]) //TODO: 0,0,0,0
   }
   
   const initVaos = () => {
@@ -138,12 +146,11 @@ export function useCanvas(canvas) {
     gl.enableVertexAttribArray(0)
   }
 
-  let verticesTexture
+  let plasmaTex
   let verticesFramebuffer
-
   const initPlasmaTex = () => {
-    verticesTexture = gl.createTexture()
-    gl.bindTexture(gl.TEXTURE_2D, verticesTexture)
+    plasmaTex = gl.createTexture()
+    gl.bindTexture(gl.TEXTURE_2D, plasmaTex)
     gl.texImage2D(
       gl.TEXTURE_2D, 
       0, 
@@ -166,7 +173,7 @@ export function useCanvas(canvas) {
       gl.FRAMEBUFFER, 
       gl.COLOR_ATTACHMENT0, 
       gl.TEXTURE_2D, 
-      verticesTexture,
+      plasmaTex,
       0)
   }
 
@@ -200,7 +207,7 @@ export function useCanvas(canvas) {
       geoTex[i] = createTexture()
       gl.framebufferTexture2D(
         gl.FRAMEBUFFER, 
-        gl.COLOR_ATTACHMENT0 + i, 
+        GL_COLOR_ATTACHMENT[i], 
         gl.TEXTURE_2D, 
         geoTex[i], 
         0
@@ -250,7 +257,7 @@ export function useCanvas(canvas) {
   let sceneProgress
   const draw = () => {
     sceneProgress = progress % 1
-    clearFrameBuffer()
+    clearScreen()
     genPlasma()
     genGeometry()
     renderGeometry()
@@ -258,7 +265,7 @@ export function useCanvas(canvas) {
     dbgGeo()
   }
   
-  const clearFrameBuffer = () => {
+  const clearScreen = () => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, gl.NULL)
     gl.viewport(0,0,resolution,resolution)
     gl.clearColor(1,1,1,0)
@@ -282,6 +289,12 @@ export function useCanvas(canvas) {
   const genGeometry = () => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, geoFb) 
     gl.viewport(0, 0, quadCountSqrt * 2, quadCountSqrt) 
+    gl.drawBuffers([
+      gl.COLOR_ATTACHMENT0,
+      gl.COLOR_ATTACHMENT1,
+      gl.COLOR_ATTACHMENT2,
+      gl.COLOR_ATTACHMENT3
+    ])
 
     gl.useProgram(shader.progs.genGeo) 
     
@@ -295,7 +308,7 @@ export function useCanvas(canvas) {
     gl.uniformMatrix4fv(shader.uniLocs.genGeo.camera, false, camera) 
 
     gl.activeTexture(gl.TEXTURE0)
-    gl.bindTexture(gl.TEXTURE_2D, verticesTexture)
+    gl.bindTexture(gl.TEXTURE_2D, plasmaTex) 
 
     gl.bindVertexArray(quadVao) 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
@@ -312,7 +325,7 @@ export function useCanvas(canvas) {
     gl.uniform1f(shader.uniLocs.renderGeo.progress, sceneProgress)
 
     for(let i = 0; i < geoTexCount; i++) {
-      gl.activeTexture(GL_TEX[i])
+      gl.activeTexture(GL_TEXTURE[i])
       gl.bindTexture(gl.TEXTURE_2D, geoTex[i])
     }
 
@@ -334,7 +347,7 @@ export function useCanvas(canvas) {
     gl.uniform2fv(shader.uniLocs.dbgTex.size, [0.2, 0.2])
 
     gl.activeTexture(gl.TEXTURE0)
-    gl.bindTexture(gl.TEXTURE_2D, verticesTexture)
+    gl.bindTexture(gl.TEXTURE_2D, plasmaTex)
 
     gl.bindVertexArray(quadVao)
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4) 
@@ -344,10 +357,10 @@ export function useCanvas(canvas) {
     gl.bindFramebuffer(gl.FRAMEBUFFER, gl.NULL)
     gl.viewport(0, 0, resolution, resolution)
 
+    gl.useProgram(shader.progs.dbgTex) 
+    
     for(let i = 0; i < geoTexCount; i++) {
-      gl.useProgram(shader.progs.dbgTex) 
-
-      gl.activeTexture(GL_TEX[i])
+      gl.activeTexture(gl.TEXTURE0)
       gl.bindTexture(gl.TEXTURE_2D, geoTex[i])
 
       gl.uniform2fv(shader.uniLocs.dbgTex.position, [0.1, 0.1 + 0.2 * i])

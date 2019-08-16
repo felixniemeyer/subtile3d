@@ -3,12 +3,14 @@
 precision mediump float;
 
 uniform sampler2D plasmaTex; 
-uniform float quadCountSqrt;
+uniform int quadCountSqrt; 
 uniform float vertexCountSqrtInverse;
 uniform float quadCountSqrtInverse;
 uniform float flatness; // 0 = maximum honeycomb look
 
 uniform mat4 camera;
+
+in vec2 ts;
 
 // v0, v1, v2 have the edgeDistance as 4th component
 layout(location = 0) out vec4 v0;
@@ -20,27 +22,28 @@ layout(location = 3) out vec4 lookAt;
 void main() {
 
 	// field
-	vec2 quadId = gl_FragCoord.xy * vec2(2,1) * quadCountSqrt;
-	vec2 edge[3];
-	if(gl_FragCoord.x >= quadCountSqrt){
-		quadId.x -= quadCountSqrt;
-		edge[0] = vec2(1,0);
-		edge[1] = vec2(1,1);
-		edge[2] = vec2(0,1);
+	vec2 quadIdNorm = ts * vec2(2,1);
+	vec2 st[3];
+	if(quadIdNorm.x >= 1.0){
+		quadIdNorm.x -= 1.0;
+		st[0] = vec2(1,0);
+		st[1] = vec2(1,1);
+		st[2] = vec2(0,1);
 	} else {
-		edge[0] = vec2(0,0);
-		edge[1] = vec2(1,0);
-		edge[2] = vec2(0,1);
+		st[0] = vec2(0,0);
+		st[1] = vec2(1,0);
+		st[2] = vec2(0,1);
 	}
 
 	vec3 coords[3]; 
 	float edgeDistance[3];
 	vec4 plasma[3]; 
 	for(int i = 0; i < 3; i++) {
-		edge[i] = edge[i] + quadId;
-		plasma[i] = texture(plasmaTex, edge[i] * vertexCountSqrtInverse); // vCSqrt = qCSqrt + 1
+		st[i] = st[i] * quadCountSqrtInverse + quadIdNorm;
+		plasma[i] = texture(plasmaTex, st[i]); // vCSqrt = qCSqrt + 1
 		coords[i] = 
-			vec3(edge[i], 0) * quadCountSqrtInverse * 2.0 // quad spans 0 to 2
+			vec3(st[i], 0) 
+			* 2.0 // quad spans 0 to 2
 			- vec3(1,1,0) // quad spans -1 to 1
 			+ (plasma[i].xyz - vec3(0.5,0.5,0.5)) * 4.0 * quadCountSqrtInverse; // adding deviation 
 	}
@@ -54,10 +57,11 @@ void main() {
 	// instead of a normal: calculate a point with same distance to all points. 
 	lookAt = vec4(
 		(coords[0] + coords[1] + coords[2]) / 3.0 
-		+ (cross(c01, c02) * quadCountSqrt * flatness ) // ' * quadCount' calibrates so that the lookAt is about as far away as the points are distant from each other
+		+ (cross(c01, c02) * float(quadCountSqrt) * flatness ) // ' * quadCount' calibrates so that the lookAt is about as far away as the points are distant from each other
 		, 1);
 
 
+	/*
 	// camera transform & perspective
 	float cameraSpread = 0.4;
 	for(int i = 0; i < 3; i++) {
@@ -82,10 +86,11 @@ void main() {
 	}
 
 	//debug: 
-	/* for(int i = 0; i < 3; i++) {
+	for(int i = 0; i < 3; i++) {
 		coords[i] = vec3(0,0,0);
 		edgeDistance[i] = 1.0;
-	} */
+	} 
+	*/
 
 	v0 = vec4(coords[0], edgeDistance[0]);
 	v1 = vec4(coords[1], edgeDistance[1]);

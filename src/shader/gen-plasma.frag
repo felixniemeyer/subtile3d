@@ -56,7 +56,7 @@ float water (in vec2 st) {
 }
 
 void main() {
-    vec2 st2 = st * 5.0;
+    vec2 st2 = st * 10.0;
 
 	// coords
     vertex.xyz = vec3(
