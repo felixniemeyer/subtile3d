@@ -83,8 +83,9 @@ export default function buildShaders(gl) {
       'geoTexV2',
       'geoTexLookAt',
       //fs
-      'progress',
-      'pixelSize'
+      'pixelSize',
+      'border', 
+      'fog'
     ]
   )
 

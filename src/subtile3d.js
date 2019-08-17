@@ -300,16 +300,16 @@ export function useCanvas(canvas) {
 
     gl.useProgram(shader.progs.genGeo) 
     
+    shape = -0.5 * (Math.cos(time*0.5) - 1)
+
     let camera = [] 
     mat4.lookAt(
       camera,
-     // [1.2 - 0.2 * sceneProgress,	  0, 0.95 - 0.6 * sceneProgress],	
-      [1.0,1.0,3.0],
-      [0 + sceneProgress * 0.1, 	  0,	0   ],	
+      [1.2 - 0.2 * sceneProgress + 0.6*shape,	  0, 0.95 - 0.6 * sceneProgress],	
+      [0 + sceneProgress * 0.1, 	  0,	shape   ],	
       [0,	    1,	0   ]
     )
     gl.uniformMatrix4fv(shader.uniLocs.genGeo.camera, false, camera) 
-    shape = -0.5 * (Math.cos(time*0.5) - 1)
     gl.uniform1f(shader.uniLocs.genGeo.shape, shape)
 
     setPrismMatrices()
@@ -321,8 +321,11 @@ export function useCanvas(canvas) {
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
   }
 
+  const xScale = Math.sqrt(0.75) 
+  const foldAngle = Math.PI - Math.acos(1/3) // radians
+
   const shear = mat4.create()
-  shear[0] = Math.sqrt(0.75) 
+  shear[0] = xScale
   shear[1] = 0.5
   
   const fold0Shift = [], fold0Unshift = []
@@ -330,11 +333,21 @@ export function useCanvas(canvas) {
   mat4.invert(fold0Unshift, fold0Shift)
 
   const foldAxis = []
-  foldAxis[0] = [Math.sqrt(0.75), -0.5, 0, 0]
+  foldAxis[0] = [xScale, -0.5, 0, 0]
   foldAxis[1] = [0, -1, 0, 0]
-  foldAxis[2] = [-Math.sqrt(0.75), 0.5, 0, 0]
+  foldAxis[2] = [-xScale, 0.5, 0, 0]
 
-  const foldAngle = Math.PI - Math.acos(1/3) // radians
+  const scale = []
+  mat4.fromScaling(scale, [0.5,0.5,0.5,1])
+
+  const translate = []
+  mat4.fromTranslation(translate, [xScale * 0.33, - 0.5, 0.1, 0])
+
+  const modelTransform = []
+  mat4.mul(modelTransform, scale, translate)
+
+  const mirrorZ = mat4.create()
+  mirrorZ[10] = -1
 
   const setPrismMatrices = () => {
     let overlapAndShear = mat4.clone(shear)
@@ -343,9 +356,17 @@ export function useCanvas(canvas) {
     for(let r = 0; r < 3; r++) {
       mat4.fromRotation(foldRotation[r], shape * foldAngle, foldAxis[r]) 
     }
-    
     mat4.mul(foldRotation[0], foldRotation[0], fold0Shift)
     mat4.mul(foldRotation[0], fold0Unshift, foldRotation[0])
+
+    let modelRotation = [[],[]]
+    let turn = time * 2.0
+    mat4.fromZRotation(modelRotation[0], (turn*1.3 - Math.sin(turn*0.8)) * 0.5)
+    mat4.fromZRotation(modelRotation[1], (turn*2.1 - Math.sin(turn*1.2)) * -0.3)
+
+    let riseTranslate = []
+    mat4.fromTranslation(riseTranslate, [0,0,shape,0])
+  
 
     let side = []
     let s
@@ -363,10 +384,26 @@ export function useCanvas(canvas) {
             if(ab == 1) {
               mat4.mul(s, foldRotation[0], s)
             } 
-      //      mat4.mul(s, foldRotation[1], s)
+            mat4.mul(s, foldRotation[1], s)
           } else if (ab == 0) {
-      //      mat4.mul(s, foldRotation[2], s)
+            mat4.mul(s, foldRotation[2], s)
           }
+
+          if(y == 0) {
+            
+          } else {
+            
+          }
+
+          mat4.mul(s, modelTransform, s) 
+
+          mat4.mul(s, modelRotation[y], s) 
+
+          if(y == 0) {
+            mat4.mul(s, mirrorZ, s) 
+          }
+
+          mat4.mul(s, riseTranslate, s) 
           
           side[x][y][ab] = s
         }
@@ -393,7 +430,8 @@ export function useCanvas(canvas) {
 
     gl.uniform1f(shader.uniLocs.renderGeo.pixelSize, 2.0 / resolution)
     gl.uniform1f(shader.uniLocs.renderGeo.resolution, resolution)
-    gl.uniform1f(shader.uniLocs.renderGeo.progress, sceneProgress)
+    gl.uniform1f(shader.uniLocs.renderGeo.border, progress )
+    gl.uniform1f(shader.uniLocs.renderGeo.fog, progress * 0.1 - shape)
 
     for(let i = 0; i < geoTexCount; i++) {
       gl.activeTexture(GL_TEXTURE[i])

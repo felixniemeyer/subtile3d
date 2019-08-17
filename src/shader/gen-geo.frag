@@ -42,27 +42,28 @@ layout(location = 3) out vec4 lookAt;
 void main() {
 
 	// field
-	vec2 quadIdNorm = ts * vec2(2,1);
-	vec2 st[3];
-	if(quadIdNorm.x >= 1.0){
-		quadIdNorm.x -= 1.0;
-		st[0] = vec2(1,0);
-		st[1] = vec2(1,1);
-		st[2] = vec2(0,1);
+	ivec2 quadId = ivec2(ts * vec2(2,1) * float(quadCountSqrt));
+	ivec2 edgeOffset[3];
+	if(quadId.x >= quadCountSqrt){
+		quadId.x -= quadCountSqrt;
+		edgeOffset[0] = ivec2(1,0);
+		edgeOffset[1] = ivec2(1,1);
+		edgeOffset[2] = ivec2(0,1);
 	} else {
-		st[0] = vec2(0,0);
-		st[1] = vec2(1,0);
-		st[2] = vec2(0,1);
+		edgeOffset[0] = ivec2(0,0);
+		edgeOffset[1] = ivec2(1,0);
+		edgeOffset[2] = ivec2(0,1);
 	}
 
+	vec2 st[3]; 
 	vec3 coords[3];
 	vec4 plasma[3]; 
 	vec3 fieldCoords[3]; 
 	for(int i = 0; i < 3; i++) {
-		st[i] = st[i] * quadCountSqrtInverse * 0.9 + quadIdNorm ;
+		st[i] = (vec2(quadId + edgeOffset[i]) + vec2(0.5))  * vertexCountSqrtInverse;
 		plasma[i] = texture(plasmaTex, st[i]); // vCSqrt = qCSqrt + 1
 		coords[i] = 
-			vec3(st[i], 0) 
+			vec3(vec2(quadId + edgeOffset[i]) * quadCountSqrtInverse, 0) 
 			* 2.0 // quad spans 0 to 2
 			- vec3(1,1,0); // quad spans -1 to 1
 		fieldCoords[i] = 
@@ -71,32 +72,34 @@ void main() {
 	}
 
 	mat4 transform; 
-	vec2 decidor = st[0] + 0.33333 * (st[1] + st[2] - 2.0 * st[0]) - quadCountSqrtInverse * vec2(0.1,0.1);
+	vec2 decidor = coords[0].xy + (coords[1].xy + coords[2].xy - 2.0 * coords[0].xy) * 0.333;
+//	st[0] + 0.33333 * (st[1] + st[2] - 2.0 * st[0]) + quadCountSqrtInverse * vec2(0.1,0.1);
 
 	float xySum = decidor.x + decidor.y;
-	if(quadIdNorm.y < 0.5) {
-		if(quadIdNorm.x < 0.5) {
-			if(xySum < 0.5) {
+	int halfQuadCountSqrt = quadCountSqrt / 2;
+	if(quadId.y < halfQuadCountSqrt) {
+		if(quadId.x < halfQuadCountSqrt) {
+			if(xySum < -1.0) {
 				transform = prismSide00A;
 			} else {
 				transform = prismSide00B;
 			}
 		} else {
-			if(xySum < 1.0) {
+			if(xySum < 0.0) {
 				transform = prismSide10A;
 			} else {
 				transform = prismSide10B;
 			}
 		}
 	} else {
-		if(quadIdNorm.x < 0.5) {
-			if(xySum < 1.0) {
+		if(quadId.x < halfQuadCountSqrt) {
+			if(xySum < 0.0) {
 				transform = prismSide01A;
 			} else {
 				transform = prismSide01B;
 			}
 		} else {
-			if(xySum < 1.5) {
+			if(xySum < 1.0) {
 				transform = prismSide11A;
 			} else {
 				transform = prismSide11B;
@@ -114,8 +117,8 @@ void main() {
 	float fragment = 0.7;
 	float a, ip;
 	for(int i = 0; i < 3; i++) {
-		a = clamp(((plasma[i].w + avgW * 3.0) * 0.25 - 0.5) * 2.5 + 0.5, 0.0, 1.0) * fragment;
-		ip = 1.0; //smoothstep(a, a + (1.0 - fragment), shape);
+		a = clamp(((plasma[i].w + avgW * 4.0) * 0.2 - 0.5) * 2.5 + 0.5, 0.0, 1.0) * fragment;
+		ip = smoothstep(a, a + (1.0 - fragment), shape);
 		// TODO: add rotation around z axis
 		coords[i] = (1.0 - ip) * fieldCoords[i] + ip * prismCoords[i];
 	}
