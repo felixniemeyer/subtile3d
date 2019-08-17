@@ -53,7 +53,17 @@ export default function buildShaders(gl) {
       'quadCountSqrtInverse',
       'vertexCountSqrtInverse',
       'flatness',
-      'camera'
+      'cameraSpread', 
+      'camera',
+      'shape',
+      'prismSide00A',
+      'prismSide00B',
+      'prismSide01A',
+      'prismSide01B',
+      'prismSide10A',
+      'prismSide10B',
+      'prismSide11A',
+      'prismSide11B'
     ]
   )
 

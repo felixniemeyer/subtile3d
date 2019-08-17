@@ -56,7 +56,7 @@ float water (in vec2 st) {
 }
 
 void main() {
-    vec2 st2 = st * 8.0;
+    vec2 st2 = st * 5.0;
 
 	// coords
     vertex.xyz = vec3(
@@ -66,5 +66,5 @@ void main() {
 	); 
 
 	// progress
-	vertex.w = water(st); 
+	vertex.w = water(st2 + 123.1); 
 }

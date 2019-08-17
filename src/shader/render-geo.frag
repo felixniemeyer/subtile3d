@@ -20,7 +20,7 @@ void main() {
 	float edgeDistance = min(min(edgeDistances.x, edgeDistances.y), edgeDistances.z);
 
 
-	float opacity = ( z + 1.85 - progress * 0.1 ) 
+	float opacity = ( /*z*/ + 1.85 - progress * 0.1 ) 
 		* smoothstep(border, border - 2.0 * pixelSize, edgeDistance);
 
 	// col = pow(col, vec3(0.4545));

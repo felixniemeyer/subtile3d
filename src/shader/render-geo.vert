@@ -53,7 +53,8 @@ void main() {
 		1 // don't do perspective transformation - we've done it manually in gen-geo
 	); 
 
-	normal = normalize(lookAt.xyz - v.xyz);
+	// 'flatness' geht schon, ist auch echt edel. Einfach xz nochmal mit z multiplizieren um die subtraktion durchzuführen und die normale auszurechnen!
+	normal = normalize(lookAt.xyz);
 
 	edgeDistances = vec3(0, 0, 0);
 	edgeDistances[edgeId] = v.w;

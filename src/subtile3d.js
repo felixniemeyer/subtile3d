@@ -63,6 +63,7 @@ export function useCanvas(canvas) {
     gl.uniform1f(shader.uniLocs.genGeo.quadCountSqrtInverse, 1.0 / quadCountSqrt)
     // dynamic 
     gl.uniform1f(shader.uniLocs.genGeo.flatness, 0.8)
+    gl.uniform1f(shader.uniLocs.genGeo.cameraSpread, 0.4)
 
     gl.useProgram(shader.progs.renderGeo)
     // static
@@ -81,7 +82,7 @@ export function useCanvas(canvas) {
     gl.uniform2fv(shader.uniLocs.dbgTex.position, [0.1, 0.6])
     gl.uniform2fv(shader.uniLocs.dbgTex.size, [0.2, 0.2])
     gl.uniform4fv(shader.uniLocs.dbgTex.valueScale, [1,1,1,1])
-    gl.uniform4fv(shader.uniLocs.dbgTex.valueShift, [0,0,0,1]) //TODO: 0,0,0,0
+    gl.uniform4fv(shader.uniLocs.dbgTex.valueShift, [0,0,0,0])
   }
   
   const initVaos = () => {
@@ -279,13 +280,14 @@ export function useCanvas(canvas) {
     gl.useProgram(shader.progs.genPlasma)
     // uniforms
     gl.uniform1f(shader.uniLocs.genPlasma.time, time) 
-    let turbulence = 0.7 + 0.3*Math.max(0, 1 - Math.pow(progress - 1, 2))
+    let turbulence = 0.6 + 0.3*Math.max(0, 1 - Math.pow(progress - 1, 2))
     gl.uniform1f(shader.uniLocs.genPlasma.turbulence, turbulence) 
     
     gl.bindVertexArray(quadVao) 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
   }
 
+  let shape = 0
   const genGeometry = () => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, geoFb) 
     gl.viewport(0, 0, quadCountSqrt * 2, quadCountSqrt) 
@@ -301,11 +303,16 @@ export function useCanvas(canvas) {
     let camera = [] 
     mat4.lookAt(
       camera,
-      [1.2 - 0.2 * sceneProgress,	  0, 0.95 - 0.6 * sceneProgress],	
+     // [1.2 - 0.2 * sceneProgress,	  0, 0.95 - 0.6 * sceneProgress],	
+      [1.0,1.0,3.0],
       [0 + sceneProgress * 0.1, 	  0,	0   ],	
       [0,	    1,	0   ]
     )
     gl.uniformMatrix4fv(shader.uniLocs.genGeo.camera, false, camera) 
+    shape = -0.5 * (Math.cos(time*0.5) - 1)
+    gl.uniform1f(shader.uniLocs.genGeo.shape, shape)
+
+    setPrismMatrices()
 
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, plasmaTex) 
@@ -314,9 +321,73 @@ export function useCanvas(canvas) {
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
   }
 
-  const renderGeometry = () => {
-    gl.bindFramebuffer(gl.FRAMEBUFFER, gl.NULL)
-    gl.viewport(0, 0, resolution, resolution) 
+  const shear = mat4.create()
+  shear[0] = Math.sqrt(0.75) 
+  shear[1] = 0.5
+  
+  const fold0Shift = [], fold0Unshift = []
+  mat4.fromTranslation(fold0Shift, [0, -1, 0, 0])
+  mat4.invert(fold0Unshift, fold0Shift)
+
+  const foldAxis = []
+  foldAxis[0] = [Math.sqrt(0.75), -0.5, 0, 0]
+  foldAxis[1] = [0, -1, 0, 0]
+  foldAxis[2] = [-Math.sqrt(0.75), 0.5, 0, 0]
+
+  const foldAngle = Math.PI - Math.acos(1/3) // radians
+
+  const setPrismMatrices = () => {
+    let overlapAndShear = mat4.clone(shear)
+    overlapAndShear[13] = 1
+    let foldRotation = [[],[],[]]  
+    for(let r = 0; r < 3; r++) {
+      mat4.fromRotation(foldRotation[r], shape * foldAngle, foldAxis[r]) 
+    }
+    
+    mat4.mul(foldRotation[0], foldRotation[0], fold0Shift)
+    mat4.mul(foldRotation[0], fold0Unshift, foldRotation[0])
+
+    let side = []
+    let s
+    for(let x = 0; x < 2; x++) {
+      side[x] = []
+      for(let y = 0; y < 2; y++) {
+        side[x][y] = []
+        for(let ab = 0; ab < 2; ab++) {
+          if(y == 0) {
+            s = mat4.clone(overlapAndShear) 
+          } else {
+            s = mat4.clone(shear)
+          }
+          if(x == 1) {
+            if(ab == 1) {
+              mat4.mul(s, foldRotation[0], s)
+            } 
+      //      mat4.mul(s, foldRotation[1], s)
+          } else if (ab == 0) {
+      //      mat4.mul(s, foldRotation[2], s)
+          }
+          
+          side[x][y][ab] = s
+        }
+      }
+    }
+
+    // mat4.mul(side[0][0][0], foldRotation[2], shear);
+
+    gl.uniformMatrix4fv(shader.uniLocs.genGeo.prismSide00A, false, side[0][0][0])
+    gl.uniformMatrix4fv(shader.uniLocs.genGeo.prismSide00B, false, side[0][0][1])
+    gl.uniformMatrix4fv(shader.uniLocs.genGeo.prismSide10A, false, side[1][0][0])
+    gl.uniformMatrix4fv(shader.uniLocs.genGeo.prismSide10B, false, side[1][0][1])
+    gl.uniformMatrix4fv(shader.uniLocs.genGeo.prismSide01A, false, side[0][1][0]) 
+    gl.uniformMatrix4fv(shader.uniLocs.genGeo.prismSide01B, false, side[0][1][1]) 
+    gl.uniformMatrix4fv(shader.uniLocs.genGeo.prismSide11A, false, side[1][1][0]) 
+    gl.uniformMatrix4fv(shader.uniLocs.genGeo.prismSide11B, false, side[1][1][1]) 
+  }                                             
+                                                
+  const renderGeometry = () => {                
+    gl.bindFramebuffer(gl.FRAMEBUFFER, gl.NULL) 
+    gl.viewport(0, 0, resolution, resolution)   
 
     gl.useProgram(shader.progs.renderGeo)
 
@@ -343,6 +414,7 @@ export function useCanvas(canvas) {
 
     gl.useProgram(shader.progs.dbgTex) 
 
+    gl.uniform4fv(shader.uniLocs.dbgTex.valueShift, [0,0,0,0])
     gl.uniform2fv(shader.uniLocs.dbgTex.position, [0.4, 0.6])
     gl.uniform2fv(shader.uniLocs.dbgTex.size, [0.2, 0.2])
 
@@ -359,12 +431,15 @@ export function useCanvas(canvas) {
 
     gl.useProgram(shader.progs.dbgTex) 
     
+    gl.uniform4fv(shader.uniLocs.dbgTex.valueShift, [0,0,0,1])
+
     for(let i = 0; i < geoTexCount; i++) {
       gl.activeTexture(gl.TEXTURE0)
       gl.bindTexture(gl.TEXTURE_2D, geoTex[i])
 
       gl.uniform2fv(shader.uniLocs.dbgTex.position, [0.1, 0.1 + 0.2 * i])
       gl.uniform2fv(shader.uniLocs.dbgTex.size, [0.2, 0.1])
+      
 
       gl.bindVertexArray(quadVao)
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4) 
