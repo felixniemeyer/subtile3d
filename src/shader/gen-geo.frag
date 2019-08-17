@@ -113,8 +113,7 @@ void main() {
 
 	// model transform 
 	float avgW = (plasma[0].w + plasma[1].w + plasma[2].w) * 0.333;
-
-	float fragment = 0.7;
+	float fragment = 0.5;
 	float a, ip;
 	for(int i = 0; i < 3; i++) {
 		a = clamp(((plasma[i].w + avgW * 4.0) * 0.2 - 0.5) * 2.5 + 0.5, 0.0, 1.0) * fragment;

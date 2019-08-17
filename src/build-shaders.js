@@ -84,7 +84,9 @@ export default function buildShaders(gl) {
       'geoTexLookAt',
       //fs
       'pixelSize',
-      'border', 
+      'borderSize', 
+      'borderZWeight', 
+      'cells',
       'fog'
     ]
   )

@@ -12,7 +12,6 @@ body {
 }
 
 #control-panel {
-	z-index: 1; 
 }
 
 .button {
@@ -22,7 +21,9 @@ body {
 	text-align: center; 
 	background-color: #12764255;
 	cursor:pointer; 
-	display: inline-block; 
+	user-select: none;
+	width: auto; 
+	display: table;
 }
 
 .button:hover {

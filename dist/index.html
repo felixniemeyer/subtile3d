@@ -13,17 +13,25 @@
 			// 3d.setAnimProgress(0..7) 
 			var controlPanel = document.getElementById('control-panel')
 			var i, button; 
-		
-			for(i = 0; i < 8; i++){
+			var lables = [
+				'fadeout', 
+				'start page', 
+				'vanish again', 
+				'design', 
+				'build', 
+				'learn', 
+				'fadeout'
+			]
+			for(i= 0; i < 7; i++){
 				button = document.createElement('div')
 				button.classList.add('button') 
 				button.addEventListener('click', ((progress) => { 
 					return () => { 
-						s3d.setAnimProgress(progress * 0.99, 2) 
+						s3d.setAnimProgress(progress, 2) 
 					}
 					})(i)
 				)
-				button.textContent = i
+				button.textContent = lables[i]
 				controlPanel.appendChild(button) 
 			}
 			

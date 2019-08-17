@@ -50,12 +50,6 @@ export function useCanvas(canvas) {
   const initShaderPrograms = () => {
     shader = buildShaders(gl)
 
-    gl.useProgram(shader.progs.genPlasma)
-    // static
-    // dynamic
-    gl.uniform1f(shader.uniLocs.genPlasma.time, 0)
-    gl.uniform1f(shader.uniLocs.genPlasma.progress, 0)
-
     gl.useProgram(shader.progs.genGeo)
     // static 
     gl.uniform1i(shader.uniLocs.genGeo.quadCountSqrt, quadCountSqrt)
@@ -63,7 +57,6 @@ export function useCanvas(canvas) {
     gl.uniform1f(shader.uniLocs.genGeo.quadCountSqrtInverse, 1.0 / quadCountSqrt)
     // dynamic 
     gl.uniform1f(shader.uniLocs.genGeo.flatness, 0.8)
-    gl.uniform1f(shader.uniLocs.genGeo.cameraSpread, 0.4)
 
     gl.useProgram(shader.progs.renderGeo)
     // static
@@ -73,6 +66,7 @@ export function useCanvas(canvas) {
     gl.uniform1i(shader.uniLocs.renderGeo.geoTexV1, 1)
     gl.uniform1i(shader.uniLocs.renderGeo.geoTexV2, 2)
     gl.uniform1i(shader.uniLocs.renderGeo.geoTexLookAt, 3)
+    gl.uniform1f(shader.uniLocs.renderGeo.borderZWeight, -0.053)
 
     // dynamic 
     
@@ -216,13 +210,13 @@ export function useCanvas(canvas) {
     }
   }
 
-  let progress = 0
   let quit = false
   let t0 = Date.now()
   let time = 0
   const loop = () => {
     time = (Date.now() - t0) / 1000
     updateProgress()
+    updateAnimParams()
     resize()
     draw()
     if(!quit) {
@@ -230,6 +224,7 @@ export function useCanvas(canvas) {
     }
   }
 
+  let progress = 0
   let progChangeT0 = 0
   let progChangeV0 = 0
   let progChangeT = 0
@@ -244,6 +239,54 @@ export function useCanvas(canvas) {
     }
   }
 
+  let scenes = [
+		{ name: 'decent', duration: 1 },
+		{ name: 'vanished', duration: 1 },
+		{ name: 'design', duration: 1 },
+		{ name: 'build', duration: 1 },
+		{ name: 'learn', duration: 1 },
+		{ name: 'fadeout', duration: 1 }
+  ]
+  const initAnimScenes = () => {
+    let p = 0
+    for(let s of scenes) {
+      s.begin = p; 
+      p += s.duration;
+    }
+  }
+
+  let sceneProg = {}
+  let anim = {}
+
+  const updateAnimParams = () => {
+    let appear, lin, smooth, swell;
+    for(let s of scenes) {
+      lin = Math.max(0, Math.min(1, (progress - s.begin) / s.duration))
+      smooth = lin * lin * (3.0 - 2.0 * lin)
+      appear = 1 - Math.pow(lin - 1, 2) 
+      swell = 1 - Math.pow(smooth * 2 - 1, 2)
+      sceneProg[s.name] = {appear, lin, smooth, swell }
+    }
+    
+    anim.prismTurnSpeed = 1.5 - sceneProg.learn.smooth
+    anim.cameraSpread = 0.4 - 0.32 * sceneProg.learn.smooth
+    anim.turbulence = 0.6  + 0.3 * Math.pow(sceneProg.design.smooth, 2)
+    anim.shape = sceneProg.build.smooth 
+    anim.borderSize = 0.1 - 0.118 * sceneProg.design.smooth - 0.025 * sceneProg.build.swell + 0.025 * sceneProg.build.smooth
+    anim.margin = sceneProg.learn.smooth
+    anim.fog = 1 - sceneProg.decent.appear + 1*sceneProg.vanished.smooth + sceneProg.design.smooth * -0.9 - sceneProg.build.smooth * 0.8 - sceneProg.build.swell
+    anim.cp = [
+      1.2 - 0.2 * sceneProg.design.smooth + 0.6 * sceneProg.build.smooth + 0.9 * sceneProg.build.swell,	  
+      -sceneProg.fadeout.smooth, 
+      0.95 - 0.6 * sceneProg.design.smooth + sceneProg.build.swell * 0.2
+    ]
+    anim.la = [
+      0 + sceneProg.design.smooth * 0.1,
+      -sceneProg.fadeout.smooth,
+      Math.pow(sceneProg.build.smooth, 1.5)
+    ]
+  }
+
   let resolution = 512
   const resize = () => {
     let height = canvas.clientHeight
@@ -255,9 +298,7 @@ export function useCanvas(canvas) {
     }
   }
 
-  let sceneProgress
   const draw = () => {
-    sceneProgress = progress % 1
     clearScreen()
     genPlasma()
     genGeometry()
@@ -280,14 +321,12 @@ export function useCanvas(canvas) {
     gl.useProgram(shader.progs.genPlasma)
     // uniforms
     gl.uniform1f(shader.uniLocs.genPlasma.time, time) 
-    let turbulence = 0.6 + 0.3*Math.max(0, 1 - Math.pow(progress - 1, 2))
-    gl.uniform1f(shader.uniLocs.genPlasma.turbulence, turbulence) 
+    gl.uniform1f(shader.uniLocs.genPlasma.turbulence, anim.turbulence) 
     
     gl.bindVertexArray(quadVao) 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
   }
 
-  let shape = 0
   const genGeometry = () => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, geoFb) 
     gl.viewport(0, 0, quadCountSqrt * 2, quadCountSqrt) 
@@ -300,17 +339,16 @@ export function useCanvas(canvas) {
 
     gl.useProgram(shader.progs.genGeo) 
     
-    shape = -0.5 * (Math.cos(time*0.5) - 1)
-
     let camera = [] 
     mat4.lookAt(
       camera,
-      [1.2 - 0.2 * sceneProgress + 0.6*shape,	  0, 0.95 - 0.6 * sceneProgress],	
-      [0 + sceneProgress * 0.1, 	  0,	shape   ],	
-      [0,	    1,	0   ]
+      anim.cp, 
+      anim.la,
+      [0, 1, 0]
     )
     gl.uniformMatrix4fv(shader.uniLocs.genGeo.camera, false, camera) 
-    gl.uniform1f(shader.uniLocs.genGeo.shape, shape)
+    gl.uniform1f(shader.uniLocs.genGeo.cameraSpread, anim.cameraSpread)
+    gl.uniform1f(shader.uniLocs.genGeo.shape, anim.shape)
 
     setPrismMatrices()
 
@@ -341,7 +379,7 @@ export function useCanvas(canvas) {
   mat4.fromScaling(scale, [0.5,0.5,0.5,1])
 
   const translate = []
-  mat4.fromTranslation(translate, [xScale * 0.33, - 0.5, 0.1, 0])
+  mat4.fromTranslation(translate, [xScale * 0.3333, - 0.5, 0.1, 0])
 
   const modelTransform = []
   mat4.mul(modelTransform, scale, translate)
@@ -354,18 +392,18 @@ export function useCanvas(canvas) {
     overlapAndShear[13] = 1
     let foldRotation = [[],[],[]]  
     for(let r = 0; r < 3; r++) {
-      mat4.fromRotation(foldRotation[r], shape * foldAngle, foldAxis[r]) 
+      mat4.fromRotation(foldRotation[r], anim.shape * foldAngle, foldAxis[r]) 
     }
     mat4.mul(foldRotation[0], foldRotation[0], fold0Shift)
     mat4.mul(foldRotation[0], fold0Unshift, foldRotation[0])
 
     let modelRotation = [[],[]]
-    let turn = time * 2.0
-    mat4.fromZRotation(modelRotation[0], (turn*1.3 - Math.sin(turn*0.8)) * 0.5)
-    mat4.fromZRotation(modelRotation[1], (turn*2.1 - Math.sin(turn*1.2)) * -0.3)
+    let turn = time * 0.5;
+    mat4.fromZRotation(modelRotation[0], (turn*1.3 - Math.sin(turn*0.8)) * 0.5 )
+    mat4.fromZRotation(modelRotation[1], (turn*2.1 - Math.sin(turn*1.2)) * -0.3 )
 
     let riseTranslate = []
-    mat4.fromTranslation(riseTranslate, [0,0,shape,0])
+    mat4.fromTranslation(riseTranslate, [0, 0, anim.shape, 0])
   
 
     let side = []
@@ -430,8 +468,8 @@ export function useCanvas(canvas) {
 
     gl.uniform1f(shader.uniLocs.renderGeo.pixelSize, 2.0 / resolution)
     gl.uniform1f(shader.uniLocs.renderGeo.resolution, resolution)
-    gl.uniform1f(shader.uniLocs.renderGeo.border, progress )
-    gl.uniform1f(shader.uniLocs.renderGeo.fog, progress * 0.1 - shape)
+    gl.uniform1f(shader.uniLocs.renderGeo.borderSize, anim.borderSize )
+    gl.uniform1f(shader.uniLocs.renderGeo.fog, anim.fog)
 
     for(let i = 0; i < geoTexCount; i++) {
       gl.activeTexture(GL_TEXTURE[i])
@@ -486,6 +524,7 @@ export function useCanvas(canvas) {
 
   if(initGl()) {
     setTimeout(() => {
+      initAnimScenes()
       initShaderPrograms()
       initVaos()
       initPlasmaTex()
@@ -500,6 +539,10 @@ export function useCanvas(canvas) {
         progChangeT0 = time
         progChangeT = time + duration
         progChangeV = destination
+        // TODO: improvement 
+        // gegeben: (T|V), (T0|V0) und (T0| ableitung an stelle T0)
+        // gesucht: funktion, die an Stelle T0 gleiche Steigung hat wie die aktuelle
+        //  + die durch (T|V) und (T0|V0) geht. An (T|V) die Steigung 0 
       },
       quit: () => { 
         quit = true 
