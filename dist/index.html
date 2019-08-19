@@ -11,13 +11,14 @@
 			var canvas = document.getElementById('canvas')
 			var s3d = subtile3d.useCanvas(canvas) 
 			// 3d.setAnimProgress(0..7) 
-			var currentProgress = 0
+			var currentProgress = 3
+			s3d.setAnimProgress(currentProgress, 0) 
 			var controlPanel = document.getElementById('control-panel')
 			var i, button; 
 			var lables = [
 				'white', 
 				'start page', 
-				'vanish again', 
+				'white', 
 				'design', 
 				'build', 
 				'learn', 

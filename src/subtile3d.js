@@ -260,7 +260,18 @@ export function useCanvas(canvas) {
 
   let sceneProg = {}
   let anim = {
-    turn: 0
+    turn: 0,
+    yRotate: {
+      v: 0,
+      v0: 0,
+      t: 0, 
+      t0: 0,
+      angle: 0
+    }
+  }
+
+  let trigger = {
+    yRotate: false
   }
 
   const updateAnimParams = () => {
@@ -285,7 +296,7 @@ export function useCanvas(canvas) {
     cells = cells * cells * (3.0 - 2.0 * cells) 
     anim.cells = cells 
     anim.cellSize = 50 - 40 * sceneProg.learn.smooth
-    anim.fog = 1 - sceneProg.decent.appear + 1*sceneProg.vanished.smooth + sceneProg.design.smooth * -0.9 - sceneProg.build.smooth * 0.8 - sceneProg.build.swell
+    anim.fog = 1 - sceneProg.decent.appear + 1*sceneProg.vanished.smooth + sceneProg.design.smooth * -0.9 - Math.pow(sceneProg.build.lin, 2) * 1.8 - sceneProg.build.swell
     anim.cp = [
       1.2 - 0.2 * sceneProg.design.smooth + 0.6 * sceneProg.build.smooth + 0.9 * sceneProg.build.swell,	  
       -sceneProg.fadeout.smooth, 
@@ -296,6 +307,33 @@ export function useCanvas(canvas) {
       -sceneProg.fadeout.smooth,
       Math.pow(sceneProg.build.smooth, 1.5)
     ]
+
+    // anim.cull = sceneProg.build.lin >= 1
+    
+    if(sceneProg.learn.lin > 0) {
+      if(!trigger.yRotate) {
+        trigger.yRotate = true
+        anim.yRotate.v = 0
+        anim.yRotate.t = time 
+        console.log("trigger!")
+      }
+    } else {
+      trigger.yRotate = false
+    }
+
+    if(anim.yRotate.t < time) {
+      anim.yRotate.v0 = anim.yRotate.v
+      anim.yRotate.v = (Math.random() * 2 - 1) * Math.PI
+      anim.yRotate.t0 = time
+      anim.yRotate.t = time + ( Math.random() + 3 ) * 0.5 
+        * ( Math.abs(anim.yRotate.v0 - anim.yRotate.v) + 0.5)
+    } else {
+      let r = Math.min(1, (time - anim.yRotate.t0) / (anim.yRotate.t - anim.yRotate.t0) * 1.1) 
+      r = 0.5 - 0.5 * Math.cos(r * Math.PI)
+      r = r * r * (3.0 - 2.0 * r)
+      anim.yRotate.angle = anim.yRotate.v0 * (1 - r) + anim.yRotate.v * r
+    }
+    anim.yRotate.finalAngle = sceneProg.learn.smooth * anim.yRotate.angle
   }
 
   let resolution = 512
@@ -397,6 +435,7 @@ export function useCanvas(canvas) {
 
   const mirrorZ = mat4.create()
   mirrorZ[10] = -1
+  mirrorZ[0] = -1 // also mirror X, so that culling stays consistent
 
   const setPrismMatrices = () => {
     let overlapAndShear = mat4.clone(shear)
@@ -415,9 +454,11 @@ export function useCanvas(canvas) {
     mat4.fromZRotation(modelRotation[1], 
       (anim.transformSpin + anim.turn*2.1 - Math.sin(anim.turn*0.81)) * -0.3 )
 
+    let rotateY = []
+    mat4.fromYRotation(rotateY, anim.yRotate.finalAngle)
+
     let riseTranslate = []
     mat4.fromTranslation(riseTranslate, [0, 0, anim.shape, 0])
-  
 
     let side = []
     let s
@@ -453,6 +494,8 @@ export function useCanvas(canvas) {
           if(y == 0) {
             mat4.mul(s, mirrorZ, s) 
           }
+
+          mat4.mul(s, rotateY, s) 
 
           mat4.mul(s, riseTranslate, s) 
           

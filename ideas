@@ -30,7 +30,7 @@ also refer to ./sketches/
 - back & front - side culling: Unterschied machen für die Build Scene, einfach dunkler innen. * 0.5 or so
 
 - Halt doch honeycomb: 
-	- z und camera im renderGeo nochmal rausrechnen
+	- z und camera im renderGeo nochmal rausrechnen (camera & perspective matrix doch zusamm? dem V Shader die inverse mitgeben)
 	- oder halt doch lassen, für ein anderes Projekt - wo ich die orignialen koordinaten im Vertex Shader habe. Hier habe ich Wireframe (was schon ne coole Leistung ist), bei einem andern Projekt mache ich Honeycomb
 
 - Lichtquellen 
