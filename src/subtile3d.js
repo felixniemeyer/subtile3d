@@ -285,8 +285,7 @@ export function useCanvas(canvas) {
     }
     
     anim.turn += (dTime * (2.5 - sceneProg.learn.appear * 2.3)) % Math.PI
-    anim.transformSpin = Math.pow(sceneProg.build.smooth, 2)  * 6
-    anim.prismTurnSpeed = 1.5 - sceneProg.learn.smooth
+    anim.transformSpin = Math.pow(sceneProg.build.smooth, 2) * 6
     anim.cameraSpread = 0.4 - 0.32 * sceneProg.learn.smooth
     anim.turbulence = 0.6  + 0.3 * Math.pow(sceneProg.design.smooth, 2)
     anim.shape = sceneProg.build.smooth 
@@ -428,7 +427,7 @@ export function useCanvas(canvas) {
   mat4.fromScaling(scale, [0.5,0.5,0.5,1])
 
   const translate = []
-  mat4.fromTranslation(translate, [xScale * 0.3333, - 0.5, 0.1, 0])
+  mat4.fromTranslation(translate, [xScale * 0.3333, - 0.5, -0.1, 0])
 
   const modelTransform = []
   mat4.mul(modelTransform, scale, translate)
@@ -442,7 +441,7 @@ export function useCanvas(canvas) {
     overlapAndShear[13] = 1
     let foldRotation = [[],[],[]]  
     for(let r = 0; r < 3; r++) {
-      mat4.fromRotation(foldRotation[r], anim.shape * foldAngle, foldAxis[r]) 
+      mat4.fromRotation(foldRotation[r], anim.shape * -foldAngle, foldAxis[r]) 
     }
     mat4.mul(foldRotation[0], foldRotation[0], fold0Shift)
     mat4.mul(foldRotation[0], fold0Unshift, foldRotation[0])
