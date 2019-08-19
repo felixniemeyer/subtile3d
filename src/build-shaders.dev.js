@@ -1,16 +1,17 @@
 import { createProgramFromSources } from './3rd-party/shader-program-build-tool.js'
 
-import vsGenPlasma from './shader/gen-plasma.vert'
-import fsGenPlasma from './shader/gen-plasma.frag'
+import vsGenPlasma from './shader/vs-gen-plasma.glsl'
+import fsGenPlasma from './shader/fs-gen-plasma.glsl'
 
-import vsGenGeo from './shader/gen-geo.vert'
-import fsGenGeo from './shader/gen-geo.frag'
+import vsGenGeo from './shader/vs-gen-geo.glsl'
+import fsGenGeo from './shader/fs-gen-geo.glsl'
 
-import vsRenderGeo from './shader/render-geo.vert'
-import fsRenderGeo from './shader/render-geo.frag'
+import vsRenderGeo from './shader/vs-render-geo.glsl'
+import fsRenderGeo from './shader/fs-render-geo.glsl'
 
-import vsDbgTex from './shader/dbg-tex.vert'
-import fsDbgTex from './shader/dbg-tex.frag'
+import vsDbgTex from './shader/vs-dbg-tex.glsl'
+import fsDbgTex from './shader/fs-dbg-tex.glsl'
+
 
 // import shader pieces and combine them together for transitions
 

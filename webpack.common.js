@@ -17,5 +17,10 @@ module.exports = {
         use: 'raw-loader'
       }
     ]
+  },
+  resolve: {
+    alias: {
+      shader: './build-shaders.dev.js'
+    }
   }
 }

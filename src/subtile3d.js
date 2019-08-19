@@ -1,4 +1,4 @@
-import buildShaders from './build-shaders.js'
+import buildShaders from 'shader'
 import { glMatrix, mat4 } from 'gl-matrix'
 glMatrix.setMatrixArrayType(Array) 
 
