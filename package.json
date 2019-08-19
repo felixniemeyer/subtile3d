@@ -8,11 +8,10 @@
   },
   "author": "felix paul niemeyer",
   "devDependencies": {
+    "gl-matrix": "^3.0.0",
+    "raw-loader": "^3.1.0",
     "webpack": "^4.39.1",
     "webpack-cli": "^3.3.6"
   },
-  "dependencies": {
-    "gl-matrix": "^3.0.0",
-    "raw-loader": "^3.1.0"
-  }
+  "dependencies": {}
 }

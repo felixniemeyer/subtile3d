@@ -1,13 +1,11 @@
 module.exports = {
+  entry: './src/subtile3d.js',
   output: {
     filename: 'subtile3d.js',
     libraryTarget: 'var',
     library: 'subtile3d'
   },
-  mode: 'development',
   context: __dirname,
-  entry: './src/subtile3d.js',
-  devtool: 'inline-source-map', 
   module: {
     rules: [
       {
