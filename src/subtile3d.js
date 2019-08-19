@@ -287,7 +287,7 @@ export function useCanvas(canvas) {
     anim.turn += (dTime * (2.5 - sceneProg.learn.appear * 2.3)) % Math.PI
     anim.transformSpin = Math.pow(sceneProg.build.smooth, 2) * 6
     anim.cameraSpread = 0.4 - 0.32 * sceneProg.learn.smooth
-    anim.turbulence = 0.6  + 0.3 * Math.pow(sceneProg.design.smooth, 2)
+    anim.turbulence = 0.6  + 0.2 * Math.pow(sceneProg.design.smooth, 2)
     anim.shape = sceneProg.build.smooth 
     anim.borderSize = 0.1 - 0.118 * sceneProg.design.smooth - 0.025 * sceneProg.build.swell + 0.025 * sceneProg.build.smooth + sceneProg.learn.smooth * 0.1
 
