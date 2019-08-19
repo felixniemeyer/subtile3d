@@ -11,23 +11,26 @@
 			var canvas = document.getElementById('canvas')
 			var s3d = subtile3d.useCanvas(canvas) 
 			// 3d.setAnimProgress(0..7) 
+			var currentProgress = 0
 			var controlPanel = document.getElementById('control-panel')
 			var i, button; 
 			var lables = [
-				'fadeout', 
+				'white', 
 				'start page', 
 				'vanish again', 
 				'design', 
 				'build', 
 				'learn', 
-				'fadeout'
+				'white'
 			]
 			for(i= 0; i < 7; i++){
 				button = document.createElement('div')
 				button.classList.add('button') 
 				button.addEventListener('click', ((progress) => { 
 					return () => { 
-						s3d.setAnimProgress(progress, 2) 
+						var duration = 2 * Math.abs(progress - currentProgress) 
+						s3d.setAnimProgress(progress, duration) 
+						currentProgress = progress
 					}
 					})(i)
 				)

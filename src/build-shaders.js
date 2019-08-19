@@ -87,7 +87,9 @@ export default function buildShaders(gl) {
       'borderSize', 
       'borderZWeight', 
       'cells',
-      'fog'
+      'cellSize',
+      'fog',
+      'resolutionInverse'
     ]
   )
 

@@ -13,6 +13,7 @@ uniform int quadCountSqrt;
 uniform float quadCountSqrtInverse; 
 
 out vec3 edgeDistances;
+out vec3 bary; 
 out float z;
 out vec3 normal; 
 
@@ -55,6 +56,9 @@ void main() {
 
 	// 'flatness' geht schon, ist auch echt edel. Einfach xz nochmal mit z multiplizieren um die subtraktion durchzuführen und die normale auszurechnen!
 	normal = normalize(lookAt.xyz);
+
+	bary = vec3(0,0,0);
+	bary[edgeId] = 1.0; 
 
 	edgeDistances = vec3(0, 0, 0);
 	edgeDistances[edgeId] = v.w;

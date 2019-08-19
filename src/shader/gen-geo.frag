@@ -66,9 +66,6 @@ void main() {
 			vec3(vec2(quadId + edgeOffset[i]) * quadCountSqrtInverse, 0) 
 			* 2.0 // quad spans 0 to 2
 			- vec3(1,1,0); // quad spans -1 to 1
-		fieldCoords[i] = 
-			coords[i]
-			+ (plasma[i].xyz - vec3(0.5,0.5,0.5)) * 4.0 * quadCountSqrtInverse; // adding deviation 
 	}
 
 	mat4 transform; 
@@ -76,37 +73,48 @@ void main() {
 //	st[0] + 0.33333 * (st[1] + st[2] - 2.0 * st[0]) + quadCountSqrtInverse * vec2(0.1,0.1);
 
 	float xySum = decidor.x + decidor.y;
+	vec3 sides; 
 	int halfQuadCountSqrt = quadCountSqrt / 2;
 	if(quadId.y < halfQuadCountSqrt) {
 		if(quadId.x < halfQuadCountSqrt) {
 			if(xySum < -1.0) {
 				transform = prismSide00A;
+				sides = vec3(-1, -1, -1);
 			} else {
 				transform = prismSide00B;
+				sides = vec3(0, 0, -1);
 			}
 		} else {
 			if(xySum < 0.0) {
 				transform = prismSide10A;
+				sides = vec3(0, -1, 0);
 			} else {
 				transform = prismSide10B;
+				sides = vec3(1, 0, 0);
 			}
 		}
 	} else {
 		if(quadId.x < halfQuadCountSqrt) {
 			if(xySum < 0.0) {
 				transform = prismSide01A;
+				sides = vec3(-1, 0, 0);
 			} else {
 				transform = prismSide01B;
+				sides = vec3(0, 1, 0);
 			}
 		} else {
 			if(xySum < 1.0) {
 				transform = prismSide11A;
+				sides = vec3(0, 0, 1);
 			} else {
 				transform = prismSide11B;
+				sides = vec3(1, 1, 1);
 			}
 		}
 	}
 	vec3 prismCoords[3];
+	vec3 closeness;
+	float sideDistance;
 	for(int i = 0; i < 3; i++) {
 		prismCoords[i] = ( transform * vec4(coords[i], 1) ).xyz;
 	}
@@ -119,7 +127,14 @@ void main() {
 		a = clamp(((plasma[i].w + avgW * 4.0) * 0.2 - 0.5) * 2.5 + 0.5, 0.0, 1.0) * fragment;
 		ip = smoothstep(a, a + (1.0 - fragment), shape);
 		// TODO: add rotation around z axis
-		coords[i] = (1.0 - ip) * fieldCoords[i] + ip * prismCoords[i];
+		closeness.x = abs(coords[i].x - sides.x);
+		closeness.y = abs(coords[i].y - sides.y);
+		closeness.z = abs(coords[i].x + coords[i].y - sides.z);
+		sideDistance = pow(closeness.x * closeness.y * closeness.z, 0.3333);
+		coords[i] = (1.0 - ip) * coords[i] + ip * prismCoords[i];
+		coords[i] += 
+			((1.0 - ip) + ip * sideDistance) 
+			* (plasma[i].xyz - vec3(0.5,0.5,0.5)) * 4.0 * quadCountSqrtInverse; // adding deviation 
 	}
 
 	// normal calculation

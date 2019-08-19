@@ -213,8 +213,11 @@ export function useCanvas(canvas) {
   let quit = false
   let t0 = Date.now()
   let time = 0
+  let dTime = 0
   const loop = () => {
-    time = (Date.now() - t0) / 1000
+    let now = (Date.now() - t0) / 1000
+    dTime = now - time
+    time = now
     updateProgress()
     updateAnimParams()
     resize()
@@ -234,7 +237,7 @@ export function useCanvas(canvas) {
       progress = progChangeV
     } else {
       let r = ( time - progChangeT0 ) / (progChangeT - progChangeT0) 
-      r = r * r * (3.0 - 2.0 * r)
+      //r = r * r * (3.0 - 2.0 * r)
       progress = r * progChangeV + (1 - r) * progChangeV0
     }
   }
@@ -256,7 +259,9 @@ export function useCanvas(canvas) {
   }
 
   let sceneProg = {}
-  let anim = {}
+  let anim = {
+    turn: 0
+  }
 
   const updateAnimParams = () => {
     let appear, lin, smooth, swell;
@@ -268,12 +273,18 @@ export function useCanvas(canvas) {
       sceneProg[s.name] = {appear, lin, smooth, swell }
     }
     
+    anim.turn += (dTime * (2.5 - sceneProg.learn.appear * 2.3)) % Math.PI
+    anim.transformSpin = Math.pow(sceneProg.build.smooth, 2)  * 6
     anim.prismTurnSpeed = 1.5 - sceneProg.learn.smooth
     anim.cameraSpread = 0.4 - 0.32 * sceneProg.learn.smooth
     anim.turbulence = 0.6  + 0.3 * Math.pow(sceneProg.design.smooth, 2)
     anim.shape = sceneProg.build.smooth 
-    anim.borderSize = 0.1 - 0.118 * sceneProg.design.smooth - 0.025 * sceneProg.build.swell + 0.025 * sceneProg.build.smooth
-    anim.margin = sceneProg.learn.smooth
+    anim.borderSize = 0.1 - 0.118 * sceneProg.design.smooth - 0.025 * sceneProg.build.swell + 0.025 * sceneProg.build.smooth + sceneProg.learn.smooth * 0.1
+
+    let cells = Math.min(sceneProg.learn.lin * 3, 1) 
+    cells = cells * cells * (3.0 - 2.0 * cells) 
+    anim.cells = cells 
+    anim.cellSize = 50 - 40 * sceneProg.learn.smooth
     anim.fog = 1 - sceneProg.decent.appear + 1*sceneProg.vanished.smooth + sceneProg.design.smooth * -0.9 - sceneProg.build.smooth * 0.8 - sceneProg.build.swell
     anim.cp = [
       1.2 - 0.2 * sceneProg.design.smooth + 0.6 * sceneProg.build.smooth + 0.9 * sceneProg.build.swell,	  
@@ -398,9 +409,11 @@ export function useCanvas(canvas) {
     mat4.mul(foldRotation[0], fold0Unshift, foldRotation[0])
 
     let modelRotation = [[],[]]
-    let turn = time * 0.5;
-    mat4.fromZRotation(modelRotation[0], (turn*1.3 - Math.sin(turn*0.8)) * 0.5 )
-    mat4.fromZRotation(modelRotation[1], (turn*2.1 - Math.sin(turn*1.2)) * -0.3 )
+    
+    mat4.fromZRotation(modelRotation[0], 
+      (anim.transformSpin + anim.turn*1.3 - Math.sin(anim.turn*0.55)) * 0.5 )
+    mat4.fromZRotation(modelRotation[1], 
+      (anim.transformSpin + anim.turn*2.1 - Math.sin(anim.turn*0.81)) * -0.3 )
 
     let riseTranslate = []
     mat4.fromTranslation(riseTranslate, [0, 0, anim.shape, 0])
@@ -469,7 +482,10 @@ export function useCanvas(canvas) {
     gl.uniform1f(shader.uniLocs.renderGeo.pixelSize, 2.0 / resolution)
     gl.uniform1f(shader.uniLocs.renderGeo.resolution, resolution)
     gl.uniform1f(shader.uniLocs.renderGeo.borderSize, anim.borderSize )
+    gl.uniform1f(shader.uniLocs.renderGeo.cells, anim.cells)
+    gl.uniform1f(shader.uniLocs.renderGeo.cellSize, anim.cellSize)
     gl.uniform1f(shader.uniLocs.renderGeo.fog, anim.fog)
+    gl.uniform1f(shader.uniLocs.renderGeo.resolutionInverse, 1.0 / resolution)
 
     for(let i = 0; i < geoTexCount; i++) {
       gl.activeTexture(GL_TEXTURE[i])

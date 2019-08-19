@@ -1,3 +1,15 @@
+
+- nach innen zeigende normalen (Honeycomb, exagerated flat shading) 
+- Shader splitten - immer zwei für eine Animation kombinieren um die Programme klein zu halten. 
+	- Programmatisch splitten um eine Codeduplizierung zu verhindern. 
+- X, Y, Z als Particle System bestimmen
+	- Normalen und Distance (für screen-perfect Wireframe mode) im VS berechnen
+	- Farbgebung im FS
+
+
+Aussicht: 
+- Interaktivität
+
 also refer to ./sketches/
 
 - Noise Textur FBM Domain Warping: 
@@ -5,8 +17,38 @@ also refer to ./sketches/
 
 - Lighning mit einer "Sonne" und einem "Sky", gelb und blau. 2 diffuse light sources
 
-- Beim Einstellen eines neuen progress, soll die aktuelle geschwindigkeit als Grundlage genommen werden. => So kann auch beim Scrollen eine softe Animation erzeugt werden. Vielleicht die Ubergänge für sich auch immer mit fadein und out (damit bei animationen über szenengrenzen hinweg keine linearen breaks zu sehen sind) 
+- S(formel in ./sketches): Beim Einstellen eines neuen progress, soll die aktuelle geschwindigkeit als Grundlage genommen werden. => So kann auch beim Scrollen eine softe Animation erzeugt werden. Vielleicht die Ubergänge für sich auch immer mit fadein und out (damit bei animationen über szenengrenzen hinweg keine linearen breaks zu sehen sind) 
 
-- wäre cool, für jede Szene die Parameter entspannt einstellen zu können. Also ein Platz, wo dann steht. keyframe[0] = { shape: 0, fog: ..., border: ... } und dann vielleicht auch immer eine interpolate funktion. Alle wo sie nichts returnt, wird standardmäßig smoothstep gemacht. Dann wär alles an einem Platz. Und Uniforms könnte man nur setzen, falls keyframe[tk].v != keyframe[tk + 1].v (das nehme ich zurück, denn es könnte ja interpolationen geben, die mit dem gleichen wert starten wie enden) 
+- D: wäre cool, für jede Szene die Parameter entspannt einstellen zu können. Also ein Platz, wo dann steht. keyframe[0] = { shape: 0, fog: ..., border: ... } und dann vielleicht auch immer eine interpolate funktion. Alle wo sie nichts returnt, wird standardmäßig smoothstep gemacht. Dann wär alles an einem Platz. Und Uniforms könnte man nur setzen, falls keyframe[tk].v != keyframe[tk + 1].v (das nehme ich zurück, denn es könnte ja interpolationen geben, die mit dem gleichen wert starten wie enden) 
 - die shader haben nur parameter und kein 'process' an sich
 	
+
+- in der Mikroskop - Szene blending aktivieren und zwei layer von ... achso, dann müsste auch 
+
+- Time: per delta Time summieren, um speed ändern zu können ;) 
+
+- back & front - side culling: Unterschied machen für die Build Scene, einfach dunkler innen. * 0.5 or so
+
+- Halt doch honeycomb: 
+	- z und camera im renderGeo nochmal rausrechnen
+	- oder halt doch lassen, für ein anderes Projekt - wo ich die orignialen koordinaten im Vertex Shader habe. Hier habe ich Wireframe (was schon ne coole Leistung ist), bei einem andern Projekt mache ich Honeycomb
+
+- Lichtquellen 
+
+- kriege ich die Zellen irgendwie rund? Distances multiplizieren oder so? = a la nur wenn von allen seiten genügend abstand ist also d1 * d2 * d3 oooooder (1-d1) * (1-d2....
+
+- "Mikroskop" Effekt: 
+	Zellen
+	Zum Rand des Kreises immer kleiner
+	Scheinbar zufällig Unschärfe (nach innen in die Zelle rein = ' unschärfe einstellen ')
+		Wär geil: unscharf werden - einstellen, unscharf werden, einstellen
+			initial: unscharf
+			Sägezahn 
+			So mit überkorrekturen - "bis es passt" ruhig lineare bewegungen
+			trigger, wenn es zu unscharf geworden ist
+			trigger, wenn es scharf genug ist
+			
+	
+- performance optimierungen - mal schauen, wo was geht
+	profiling? 
+	dimensionen anpassen...
