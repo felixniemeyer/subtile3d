@@ -12,6 +12,10 @@
 
 			// Make subtile3d draw on the given canvas
 			var s3d = subtile3d.useCanvas(canvas) 
+			if(s3d == undefined) {
+				alert('cannot run subtile3d, use a more modern browser')
+				return
+			}
 
 			// Change the animation progress. Second parameter is the transition duration in secs
 			var animationProgress = 1

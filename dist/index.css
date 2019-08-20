@@ -23,6 +23,7 @@ body {
 	background-color: #12764255;
 	cursor:pointer; 
 	user-select: none;
+	-moz-user-select: none;
 	width: auto; 
 	display: table;
 	animation-name: deselect;
