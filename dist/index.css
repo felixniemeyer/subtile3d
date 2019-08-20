@@ -1,4 +1,5 @@
 body {
+	font-family: sans-serif; 
 }
 
 #canvas {
@@ -24,8 +25,32 @@ body {
 	user-select: none;
 	width: auto; 
 	display: table;
+	animation-name: deselect;
+	animation-duration: 0.5s;
+}
+
+h2 {
+	margin: 10px;
+	font-size: 20px;
 }
 
 .button:hover {
 	background-color: #127642aa;
+}
+
+.button.active {
+	margin-left: 20px;
+	/* box-shadow: 0px 0px 7px #ff33aa; */
+	animation-name: select;
+	animation-duration: 0.5s;
+}
+
+@keyframes select {
+  from {margin-left: 10px;}
+  to {margin-left: 20px;}
+}
+
+@keyframes deselect {
+  from {margin-left: 20px;}
+  to {margin-left: 10px;}
 }

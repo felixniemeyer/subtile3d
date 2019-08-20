@@ -4,7 +4,6 @@ glMatrix.setMatrixArrayType(Array)
 
 // Maydo TODO: tidy up function, e.g. deleteBuffer(vb)...
 
-
 export function useCanvas(canvas) {
   const maxResolution = 4096
   const quadCountSqrt = Math.pow(2, 5) 
@@ -22,7 +21,7 @@ export function useCanvas(canvas) {
     })
 
     if (!gl) {
-      console.error("could not get webgl2 content")
+      console.error("subtile3d: could not get webgl2 content")
       return false
     }
 
@@ -31,14 +30,14 @@ export function useCanvas(canvas) {
     
     var ext = gl.getExtension('EXT_color_buffer_float')
     if (!ext) {
-      console.error("need gl extension EXT_color_buffer_float")
+      console.error("subtile3d: need gl extension EXT_color_buffer_float")
       gl = undefined
       return false
     }
     
     var ext = gl.getExtension('OES_texture_float_linear')
     if (!ext) {
-      console.error("need gl extension OES_texture_float_linear")
+      console.error("subtile3d: need gl extension OES_texture_float_linear")
       gl = undefined
       return false
     }
@@ -284,12 +283,12 @@ export function useCanvas(canvas) {
       sceneProg[s.name] = {appear, lin, smooth, swell }
     }
     
-    anim.turn += (dTime * (2.5 - sceneProg.learn.appear * 2.3)) % Math.PI
+    anim.turn += (dTime * (1.5 - sceneProg.learn.appear * 1.3)) % Math.PI
     anim.transformSpin = Math.pow(sceneProg.build.smooth, 2) * 6
     anim.cameraSpread = 0.4 - 0.32 * sceneProg.learn.smooth
     anim.turbulence = 0.6  + 0.2 * Math.pow(sceneProg.design.smooth, 2)
     anim.shape = sceneProg.build.smooth 
-    anim.borderSize = 0.1 - 0.118 * sceneProg.design.smooth - 0.025 * sceneProg.build.swell + 0.025 * sceneProg.build.smooth + sceneProg.learn.smooth * 0.1
+    anim.borderSize = 0.1 - 0.118 * sceneProg.design.smooth - 0.045 * sceneProg.build.swell + 0.025 * sceneProg.build.smooth + sceneProg.learn.smooth * 0.1
 
     let cells = Math.min(sceneProg.learn.lin * 3, 1) 
     cells = cells * cells * (3.0 - 2.0 * cells) 
@@ -314,7 +313,6 @@ export function useCanvas(canvas) {
         trigger.yRotate = true
         anim.yRotate.v = 0
         anim.yRotate.t = time 
-        console.log("trigger!")
       }
     } else {
       trigger.yRotate = false
@@ -322,12 +320,12 @@ export function useCanvas(canvas) {
 
     if(anim.yRotate.t < time) {
       anim.yRotate.v0 = anim.yRotate.v
-      anim.yRotate.v = (Math.random() * 2 - 1) * Math.PI
+      anim.yRotate.v = 0.25 * (anim.yRotate.v0 + 3 * (Math.random() * 2 - 1.2) * Math.PI) 
       anim.yRotate.t0 = time
-      anim.yRotate.t = time + ( Math.random() + 3 ) * 0.5 
+      anim.yRotate.t = time + ( Math.random() + 2 ) * 0.8
         * ( Math.abs(anim.yRotate.v0 - anim.yRotate.v) + 0.5)
     } else {
-      let r = Math.min(1, (time - anim.yRotate.t0) / (anim.yRotate.t - anim.yRotate.t0) * 1.1) 
+      let r = Math.min(1, (time - anim.yRotate.t0) / (anim.yRotate.t - anim.yRotate.t0) * 2.2) 
       r = 0.5 - 0.5 * Math.cos(r * Math.PI)
       r = r * r * (3.0 - 2.0 * r)
       anim.yRotate.angle = anim.yRotate.v0 * (1 - r) + anim.yRotate.v * r
