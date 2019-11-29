@@ -4,7 +4,9 @@
   "description": "3d graphics for dbl portfolio website",
   "main": "index.js",
   "scripts": {
-    "test": "test"
+    "test": "test",
+	"dev": "npx webpack --config webpack.dev.js", 
+	"build": "npx webpack --config webpack.prod.js"
   },
   "author": "felix paul niemeyer",
   "devDependencies": {

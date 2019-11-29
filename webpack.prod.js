@@ -7,7 +7,7 @@ module.exports = merge(common, {
     rules: [
       {
         test: /\.glsl$/,
-        use: './src/dev-tools/webpack-glsl-minify.js'
+        use: './src/3rd-party/webpack-glsl-minify.js'
       }
     ]
   },
