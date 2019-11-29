@@ -15,10 +15,9 @@ import fsDbgTex from './shader/fs-dbg-tex.glsl'
 
 // import shader pieces and combine them together for transitions
 
-const getUniformLocations = (gl, program, uniformNames) => {
-  var uniformMap = {}
-  for(var i = 0; i < uniformNames.length; i++) {
-    var uName = uniformNames[i] 
+const getUniformLocations = (gl, program, uniforms) => {
+  var uName, uniformMap = {}
+  for( uName in uniforms ){
     uniformMap[uName] = gl.getUniformLocation(program, uName)
   }
   return uniformMap
@@ -35,10 +34,7 @@ export default function buildShaders(gl) {
     ]
   )
   uniLocs.genPlasma = getUniformLocations(
-    gl, progs.genPlasma, [
-      'time',
-      'turbulence'
-    ]
+    gl, progs.genPlasma, {...vsGenPlasma.uniforms, ...fsGenPlasma.uniforms}
   )
 
   console.log('building shader', 'genGeo')
@@ -48,24 +44,7 @@ export default function buildShaders(gl) {
     ]
   )
   uniLocs.genGeo = getUniformLocations(
-    gl, progs.genGeo, [
-      'plasmaTex',
-      'quadCountSqrt',
-      'quadCountSqrtInverse',
-      'vertexCountSqrtInverse',
-      'flatness',
-      'cameraSpread', 
-      'camera',
-      'shape',
-      'prismSide00A',
-      'prismSide00B',
-      'prismSide01A',
-      'prismSide01B',
-      'prismSide10A',
-      'prismSide10B',
-      'prismSide11A',
-      'prismSide11B'
-    ]
+    gl, progs.genGeo, {...vsGenGeo.uniforms, ...fsGenGeo.uniforms }
   )
 
   console.log('building shader', 'renderGeo')
@@ -75,23 +54,7 @@ export default function buildShaders(gl) {
     ]
   )
   uniLocs.renderGeo = getUniformLocations(
-    gl, progs.renderGeo, [
-      // vs
-      'quadCountSqrt',
-      'quadCountSqrtInverse',
-      'geoTexV0', 
-      'geoTexV1',
-      'geoTexV2',
-      'geoTexLookAt',
-      //fs
-      'pixelSize',
-      'borderSize', 
-      'borderZWeight', 
-      'cells',
-      'cellSize',
-      'fog',
-      'resolutionInverse'
-    ]
+    gl, progs.renderGeo, {...vsRenderGeo.uniforms, ...fsRenderGeo.uniforms }
   )
 
   console.log('building shader', 'dbgTex')
@@ -101,13 +64,7 @@ export default function buildShaders(gl) {
     ]
   )
   uniLocs.dbgTex = getUniformLocations(
-    gl, progs.dbgTex, [
-      'position', 
-      'size',
-      'tex',
-      'valueShift', 
-      'valueScale'
-    ]
+    gl, progs.dbgTex, {...vsDbgTex.uniforms, ...fsDbgTex.uniforms }
   )
 
   return {
