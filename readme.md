@@ -3,7 +3,8 @@
 A computer graphics demo that runs in the browser (WebGL).
 
 ## preview .gif
-[preview](subtile3d.gif)
+![preview](subtile3d.gif "preview")
+
 
 ## build
 
