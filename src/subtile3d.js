@@ -212,9 +212,10 @@ export function useCanvas(canvas) {
   let quit = false
   let t0 = Date.now()
   let time = 0
+  let timeScale = 1
   let dTime = 0
   const loop = () => {
-    let now = (Date.now() - t0) / 1000
+    let now = (Date.now() - t0) / 1000 * timeScale
     dTime = now - time
     time = now
     updateProgress()
@@ -222,7 +223,9 @@ export function useCanvas(canvas) {
     resize()
     draw()
     if(!quit) {
-      window.requestAnimationFrame(loop)
+    //  setTimeout(() => {
+        window.requestAnimationFrame(loop)
+    //  }, 40)
     }
   }
 
