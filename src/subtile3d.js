@@ -229,19 +229,11 @@ export function useCanvas(canvas) {
     }
   }
 
-  let progress = 0
-  let progChangeT0 = 0
-  let progChangeV0 = 0
-  let progChangeT = 0
-  let progChangeV = 0
+  let progress = 2
+  let progDestination = 3
   const updateProgress = () => {
-    if(time > progChangeT) {
-      progress = progChangeV
-    } else {
-      let r = ( time - progChangeT0 ) / (progChangeT - progChangeT0) 
-      //r = r * r * (3.0 - 2.0 * r)
-      progress = r * progChangeV + (1 - r) * progChangeV0
-    }
+    const f = Math.pow(0.6, dTime)
+    progress = progress * f  +  progDestination * (1 - f)
   }
 
   let scenes = [
@@ -592,16 +584,8 @@ export function useCanvas(canvas) {
     })
     // return 3dCockpit
     return { 
-      setAnimProgress: (destination, duration) => {
-        duration = duration || 0
-        progChangeV0 = progress
-        progChangeT0 = time
-        progChangeT = time + duration
-        progChangeV = destination
-        // TODO: improvement 
-        // gegeben: (T|V), (T0|V0) und (T0| ableitung an stelle T0)
-        // gesucht: funktion, die an Stelle T0 gleiche Steigung hat wie die aktuelle
-        //  + die durch (T|V) und (T0|V0) geht. An (T|V) die Steigung 0 
+      setAnimProgress: (destination) => {
+        progDestination = destination
       },
       quit: () => { 
         quit = true 
